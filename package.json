@@ -1,0 +1,135 @@
+{
+	"name": "ansible-vault-vscode",
+	"version": "1.0.0",
+	"publisher": "ipierre1",
+	"engines": {
+		"vscode": "^1.87.0"
+	},
+	"galleryBanner": {
+		"color": "#e00",
+		"theme": "light"
+	},
+	"license": "MIT",
+	"icon": "icon.png",
+	"displayName": "Ansible Vault",
+	"description": "Encrypt & Decrypt Ansible vault files and inlines without Python and Ansible",
+	"categories": [
+		"Other"
+	],
+	"keywords": [
+		"ansible",
+		"ansible-vault",
+		"decrypt",
+		"encrypt",
+		"multi-root ready"
+	],
+	"preview": false,
+	"main": "./out/extension.js",
+	"contributes": {
+		"configuration": {
+			"title": "ansible-vault",
+			"properties": {
+				"ansibleVault.executable": {
+					"type": "string",
+					"default": "ansible-vault",
+					"description": "Full path of ansible-vault executable"
+				},
+				"ansibleVault.keypass": {
+					"type": "string",
+					"default": "",
+					"description": "ansible-vault password text"
+				},
+				"ansibleVault.keyfile": {
+					"type": "string",
+					"default": "",
+					"description": "ansible-vault password file path or vault-identity-list"
+				},
+				"ansibleVault.encryptVaultId": {
+					"type": "string",
+					"default": "",
+					"description": "ansible-vault vault ID for encryption"
+				}
+			}
+		},
+		"commands": [
+			{
+				"command": "extension.ansibleVault",
+				"title": "Encrypt & Decrypt with ansible-vault",
+				"category": "Ansible Vault"
+			},
+			{
+				"command": "extension.ansibleVault.selectVaultId",
+				"title": "Remember vault ID for encryption with ansible-vault",
+				"category": "Ansible Vault"
+			},
+			{
+				"command": "extension.ansibleVault.clearVaultIdSelection",
+				"title": "Reset vault ID setting for ansible-vault",
+				"category": "Ansible Vault"
+			}
+		],
+		"menus": {
+			"editor/context": [
+				{
+					"command": "extension.ansibleVault",
+					"when": "editorTextFocus"
+				}
+			]
+		},
+		"keybindings": [
+			{
+				"command": "extension.ansibleVault",
+				"key": "ctrl+alt+w",
+				"mac": "cmd+alt+w",
+				"when": "editorTextFocus"
+			},
+			{
+				"command": "extension.ansibleVault.selectVaultId",
+				"key": "ctrl+alt+=",
+				"mac": "cmd+alt+="
+			},
+			{
+				"command": "extension.ansibleVault.clearVaultIdSelection",
+				"key": "ctrl+alt+-",
+				"mac": "cmd+alt+-"
+			}
+		]
+	},
+	"activationEvents": [
+		"onCommand:extension.ansibleVault",
+		"onCommand:extension.ansibleVault.selectVaultId",
+		"onCommand:extension.ansibleVault.clearVaultIdSelection"
+	],
+	"markdown": "github",
+	"qna": "marketplace",
+	"dependencies": {
+		"@types/ini": "^4.1.0",
+		"@types/tmp": "^0.1.0",
+		"ansible-vault": "^1.1.1",
+		"ini": "^4.1.2",
+		"tmp": "^0.2.3",
+		"untildify": "^4.0.0"
+	},
+	"devDependencies": {
+		"@types/node": "^20.11.28",
+		"@types/vscode": "^1.87.0",
+		"@typescript-eslint/eslint-plugin": "^7.0.0",
+		"@typescript-eslint/parser": "^7.2.0",
+		"eslint": "^8.57.0",
+		"typescript": "^5.4.2"
+	},
+	"scripts": {
+		"vscode:package": "vsce package",
+		"compile": "tsc -p ./",
+		"lint": "eslint \"src/**/*.ts\"",
+		"watch": "tsc -watch -p ./"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ipierre1/ansible-vault-vscode"
+	},
+	"__metadata": {
+		"isMachineScoped": true,
+		"installedTimestamp": 1710516500773
+	}
+}

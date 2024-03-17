@@ -1,0 +1,7 @@
+out
+node_modules
+.vscode-test/**
+ansible.cfg
+zread-only
+ztest
+ztest-inline
