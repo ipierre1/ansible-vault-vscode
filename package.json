@@ -11,7 +11,7 @@
 	},
 	"license": "MIT",
 	"icon": "icon.png",
-	"displayName": "Ansible Vault",
+	"displayName": "Ansible Vault standalone",
 	"description": "Encrypt & Decrypt Ansible vault files and inlines without Python and Ansible",
 	"categories": [
 		"Other"
