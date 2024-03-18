@@ -5,3 +5,4 @@ ansible.cfg
 zread-only
 ztest
 ztest-inline
+*.vsix
