@@ -1,9 +1,9 @@
 {
 	"name": "ansible-vault-vscode",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"publisher": "ipierre1",
 	"engines": {
-		"vscode": "^1.87.0"
+		"vscode": "^1.83.0"
 	},
 	"galleryBanner": {
 		"color": "#e00",
@@ -112,7 +112,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "^20.11.28",
-		"@types/vscode": "^1.87.0",
+		"@types/vscode": "^1.83.0",
 		"@typescript-eslint/eslint-plugin": "^7.0.0",
 		"@typescript-eslint/parser": "^7.2.0",
 		"eslint": "^8.57.0",

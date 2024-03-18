@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
+import * as path from "path";
 import untildify from "untildify";
 import * as ini from "ini";
 
@@ -25,23 +26,51 @@ export function getRootPath(logs: vscode.OutputChannel, editorDocumentUri: vscod
     return rootPath;
 }
 
-export function scanAnsibleCfg(logs: vscode.OutputChannel, rootPath: any = undefined) {
-    logs.appendLine(`util.scanAnsibleCfg(${rootPath})`);
+export function findAnsibleCfgFile(logs: vscode.OutputChannel, startPath: any = undefined): string | undefined {
+    if (!fs.existsSync(startPath)) {
+        logs.appendLine(`no dir ${startPath}`);
+        return undefined;
+    }
 
+    const files = fs.readdirSync(startPath);
+    for (let i = 0; i < files.length; i++) {
+        const filename = path.join(startPath, files[i]);
+        const stat = fs.lstatSync(filename);
+        if (stat.isDirectory()) {
+            const foundInSubdirectory = findAnsibleCfgFile(logs, filename);
+            if (foundInSubdirectory) {
+                return foundInSubdirectory;
+            }
+        } else if (filename.endsWith('ansible.cfg')) {
+            return filename;
+        }
+    }
+    return undefined;
+}
+
+export function scanAnsibleCfg(logs: vscode.OutputChannel, otherPath: any = undefined, rootPath: any = undefined) {
+    
     const cfgFiles = [`~/.ansible.cfg`, `/etc/ansible.cfg`];
-
+    
     if (rootPath) {
         cfgFiles.unshift(`${rootPath}/ansible.cfg`);
     }
-
+    
+    // WIP
+    // if (otherPath) {
+    //     cfgFiles.unshift(`${otherPath}`);
+    // }
+    
     if (process.env.ANSIBLE_CONFIG) {
         cfgFiles.unshift(process.env.ANSIBLE_CONFIG);
     }
-
+    
     let result: [string, false | Array<string>] = ["", false];
-
+    logs.appendLine(`Info (${otherPath})`);
+    
     for (let i = 0; i < cfgFiles.length; i++) {
         const cfgFile = cfgFiles[i];
+        logs.appendLine(`util.scanAnsibleCfg(${cfgFile})`);
         const cfgPath = untildify(cfgFile);
 
         const cfg = getValueByCfg(logs, cfgPath);

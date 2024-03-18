@@ -30,9 +30,10 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Read `ansible.cfg`
     const rootPath = util.getRootPath(logs, editor.document.uri);
+    const otherPath = util.findAnsibleCfgFile(logs, rootPath);
     let keyInCfg: string, vaultIds: false | Array<string>;
     // eslint-disable-next-line prefer-const
-    [keyInCfg, vaultIds] = util.scanAnsibleCfg(logs, rootPath);
+    [keyInCfg, vaultIds] = util.scanAnsibleCfg(logs, otherPath, rootPath);
 
     // Extract `ansible-vault` password
     if (keyInCfg) {
@@ -78,12 +79,13 @@ export function activate(context: vscode.ExtensionContext) {
 
       if (type === "plaintext") {
         logs.appendLine(`Encrypt selected text`);
+        const vaultId = await encryptVaultId(vaultIds);
 
         let encryptedText = await encryptInline(
           text,
           rootPath,
           pass,
-          await encryptVaultId(vaultIds)
+          vaultId,
         );
         encryptedText = "!vault |\n" + encryptedText;
         editor.edit((editBuilder) => {
@@ -97,9 +99,10 @@ export function activate(context: vscode.ExtensionContext) {
         });
       } else if (type === "encrypted") {
         logs.appendLine(`Decrypt selected text`);
-
+        const test = text.replace('!vault |', '').trim().replace(/[^\S\r\n]+/gm, '');
+        logs.appendLine(test);
         const decryptedText = await decryptInline(
-          text,
+          text.replace('!vault |', '').trim().replace(/[^\S\r\n]+/gm, ''),
           rootPath,
           pass,
           await encryptVaultId(vaultIds)
@@ -168,8 +171,10 @@ export function activate(context: vscode.ExtensionContext) {
 
     const editor = vscode.window.activeTextEditor;
     let rootPath = undefined;
+    let otherPath = undefined;
     if (editor) {
       rootPath = util.getRootPath(logs, editor.document.uri);
+      otherPath = util.findAnsibleCfgFile(logs, rootPath);
     } else {
       vscode.window.showWarningMessage(
         "No editor opened! Failed to determine current workspace root folder"
@@ -179,7 +184,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     let keyInCfg: string, vaultIds: false | Array<string>;
     // eslint-disable-next-line prefer-const
-    [keyInCfg, vaultIds] = util.scanAnsibleCfg(logs, rootPath);
+    [keyInCfg, vaultIds] = util.scanAnsibleCfg(logs, otherPath, rootPath);
     // Try to get vault list from workspace config
     if (!keyInCfg && !!config.keyfile && isVaultIdList(config.keyfile)) {
       vaultIds = util.getVaultIdList(config.keyfile);
