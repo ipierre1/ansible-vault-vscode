@@ -79,12 +79,13 @@ export function activate(context: vscode.ExtensionContext) {
       if (type === "plaintext") {
         logs.appendLine(`Encrypt selected text`);
 
-        const encryptedText = await encryptInline(
+        let encryptedText = await encryptInline(
           text,
           rootPath,
           pass,
           await encryptVaultId(vaultIds)
         );
+        encryptedText = "!vault |\n" + encryptedText;
         editor.edit((editBuilder) => {
           editBuilder.replace(
             selection,
@@ -108,10 +109,7 @@ export function activate(context: vscode.ExtensionContext) {
         });
       }
     } else {
-      let content = "";
-      await vscode.workspace.openTextDocument(doc.fileName).then((document) => {
-        content = document.getText();
-      });
+      const content = editor.document.getText();
       const type = getTextType(content);
 
       if (type === "plaintext") {
