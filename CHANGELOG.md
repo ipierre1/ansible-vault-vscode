@@ -2,6 +2,12 @@
 
 All notable changes to the `ansible-vault-vscode` extension will be documented in this file.
 
+## [1.0.4] - 2024-03-22
+
+### Feat
+
+- Vault ID List with password search.
+
 ## [1.0.3] - 2024-03-18
 
 ### Fixed
