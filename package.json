@@ -116,7 +116,7 @@
 		"@typescript-eslint/eslint-plugin": "^7.0.0",
 		"@typescript-eslint/parser": "^7.2.0",
 		"eslint": "^8.57.0",
-		"typescript": "^5.4.2"
+		"typescript": "^5.4.3"
 	},
 	"scripts": {
 		"vscode:package": "vsce package",
