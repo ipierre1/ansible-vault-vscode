@@ -28,7 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
     let pass: any = "";
 
     // Read `ansible.cfg`
-    const rootPath = util.getRootPath(logs, editor.document.uri);
+    const configFileInWorkspacePath = util.getConfigFileInWorkspace(logs, editor.document.uri);
     let otherPath = util.findAnsibleCfgFile(
       logs,
       editor.document.uri.fsPath,
@@ -50,7 +50,7 @@ export function activate(context: vscode.ExtensionContext) {
     [keyInCfg, vaultIds, vaultPass] = util.scanAnsibleCfg(
       logs,
       otherPath,
-      rootPath
+      configFileInWorkspacePath
     );
 
     const text = editor.document.getText(selection);
@@ -211,10 +211,10 @@ export function activate(context: vscode.ExtensionContext) {
     logs.appendLine("✏️ Trying to write VaultID into settings");
 
     const editor = vscode.window.activeTextEditor;
-    let rootPath = undefined;
+    let configFileInWorkspacePath = undefined;
     let otherPath = undefined;
     if (editor) {
-      rootPath = util.getRootPath(logs, editor.document.uri);
+      configFileInWorkspacePath = util.getConfigFileInWorkspace(logs, editor.document.uri);
       otherPath = util.findAnsibleCfgFile(
         logs,
         editor.document.uri.fsPath,
@@ -234,7 +234,7 @@ export function activate(context: vscode.ExtensionContext) {
     [keyInCfg, vaultIds, vaultPass] = util.scanAnsibleCfg(
       logs,
       otherPath,
-      rootPath
+      configFileInWorkspacePath
     );
     // Try to get vault list from workspace config
     if (!keyInCfg && !!config.keyfile && isVaultIdList(config.keyfile)) {

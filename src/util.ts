@@ -4,14 +4,14 @@ import * as path from "path";
 import untildify from "untildify";
 import * as ini from "ini";
 
-export function getRootPath(
+export function getConfigFileInWorkspace(
   logs: vscode.OutputChannel,
   editorDocumentUri: vscode.Uri
 ) {
-  let rootPath: string | undefined = undefined;
+  let configFileInWorkspacePath: string | undefined = undefined;
 
   if (vscode.workspace.workspaceFolders) {
-    rootPath = vscode.workspace.workspaceFolders.length
+    configFileInWorkspacePath = vscode.workspace.workspaceFolders.length
       ? vscode.workspace.workspaceFolders[0].uri.fsPath
       : undefined;
   }
@@ -21,13 +21,13 @@ export function getRootPath(
       vscode.workspace.getWorkspaceFolder(editorDocumentUri);
 
     if (workspaceFolder) {
-      rootPath = workspaceFolder.uri.fsPath;
+      configFileInWorkspacePath = workspaceFolder.uri.fsPath;
     } else {
-      rootPath = undefined;
+      configFileInWorkspacePath = undefined;
     }
   }
 
-  return rootPath;
+  return configFileInWorkspacePath;
 }
 
 export function verifyAnsibleDirectory(
@@ -88,8 +88,8 @@ export function findAnsibleCfgFile(
 
 export function scanAnsibleCfg(
   logs: vscode.OutputChannel,
-  otherPath: any = undefined,
-  rootPath: any = undefined
+  configFileInDirectoryPath: any = undefined,
+  configFileInWorkspacePath: any = undefined
 ) {
   let cfgFiles: string[] = [];
 
@@ -97,12 +97,12 @@ export function scanAnsibleCfg(
       cfgFiles = ["~/.ansible.cfg", "/etc/ansible.cfg"];
   }
 
-  if (rootPath) {
-    cfgFiles.unshift(`${rootPath}/ansible.cfg`);
+  if (configFileInWorkspacePath) {
+    cfgFiles.unshift(`${configFileInWorkspacePath}${path.sep}ansible.cfg`);
   }
 
-  if (otherPath) {
-    cfgFiles.unshift(`${otherPath}`);
+  if (configFileInDirectoryPath) {
+    cfgFiles.unshift(`${configFileInDirectoryPath}`);
   }
 
   if (process.env.ANSIBLE_CONFIG) {
@@ -168,13 +168,13 @@ export function scanAnsibleCfg(
 
 export function findPassword(
   logs: vscode.OutputChannel,
-  rootPath: any,
+  configFileInWorkspacePath: any,
   vaultPassFile: any
 ) {
   if (fs.existsSync(vaultPassFile)) {
     return fs.readFileSync(vaultPassFile, "utf-8");
   } else {
-    const passPath = findAnsibleCfgFile(logs, rootPath, vaultPassFile.trim());
+    const passPath = findAnsibleCfgFile(logs, configFileInWorkspacePath, vaultPassFile.trim());
     return readFile(logs, passPath);
   }
   return undefined;
@@ -188,7 +188,7 @@ export function readFile(logs: vscode.OutputChannel, path: any) {
 }
 
 const getValueByCfg = (logs: vscode.OutputChannel, path: any) => {
-  logs.appendLine(`📎 Reading '${path}'...`);
+  logs.appendLine(`📎 Reading '${path}'`);
 
   if (fs.existsSync(path)) {
     return ini.parse(fs.readFileSync(path, "utf-8"));
