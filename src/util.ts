@@ -12,7 +12,7 @@ export function getRootPath(
 
   if (vscode.workspace.workspaceFolders) {
     rootPath = vscode.workspace.workspaceFolders.length
-      ? vscode.workspace.workspaceFolders[0].name
+      ? vscode.workspace.workspaceFolders[0].uri.fsPath
       : undefined;
   }
 
@@ -21,7 +21,7 @@ export function getRootPath(
       vscode.workspace.getWorkspaceFolder(editorDocumentUri);
 
     if (workspaceFolder) {
-      rootPath = workspaceFolder.uri.path;
+      rootPath = workspaceFolder.uri.fsPath;
     } else {
       rootPath = undefined;
     }
@@ -51,28 +51,39 @@ export function verifyAnsibleDirectory(
 
 export function findAnsibleCfgFile(
   logs: vscode.OutputChannel,
-  startPath: any = undefined,
-  needle: any = undefined
+  startPath: string | undefined,
+  needle: string | undefined
 ): string | undefined {
-  if (!fs.existsSync(startPath)) {
-    logs.appendLine(`no dir ${startPath}`);
+  if (!startPath || !fs.existsSync(startPath)) {
+    logs.appendLine(`Invalid start path: ${startPath}`);
     return undefined;
   }
 
-  const files = fs.readdirSync(startPath);
-  for (let i = 0; i < files.length; i++) {
-    const filename = path.join(startPath, files[i]);
-    const stat = fs.lstatSync(filename);
-    if (stat.isDirectory()) {
-      const foundInSubdirectory = findAnsibleCfgFile(logs, filename, needle);
-      if (foundInSubdirectory) {
-        return foundInSubdirectory;
-      }
-    } else if (filename.endsWith(needle)) {
-      return filename;
-    }
+  // Normalize path for Windows
+  startPath = path.normalize(startPath);
+
+  // If startPath is a file, remove the file portion
+  if (fs.lstatSync(startPath).isFile()) {
+    startPath = path.dirname(startPath);
   }
-  return undefined;
+
+  let currentDir = startPath;
+  let foundPath: string | undefined;
+
+  while (currentDir !== path.parse(currentDir).root) {
+    const files = fs.readdirSync(currentDir);
+    if (files.includes(needle || "")) {
+      const filePath = path.join(currentDir, needle || "");
+      if (fs.existsSync(filePath)) {
+        foundPath = filePath;
+        break;
+      }
+    }
+
+    currentDir = path.dirname(currentDir);
+  }
+
+  return foundPath;
 }
 
 export function scanAnsibleCfg(
@@ -80,7 +91,11 @@ export function scanAnsibleCfg(
   otherPath: any = undefined,
   rootPath: any = undefined
 ) {
-  const cfgFiles = [`~/.ansible.cfg`, `/etc/ansible.cfg`];
+  let cfgFiles: string[] = [];
+
+  if (process.platform !== "win32") {
+      cfgFiles = ["~/.ansible.cfg", "/etc/ansible.cfg"];
+  }
 
   if (rootPath) {
     cfgFiles.unshift(`${rootPath}/ansible.cfg`);
@@ -99,11 +114,8 @@ export function scanAnsibleCfg(
     false | Array<string>,
     false | { [key: string]: string }
   ] = ["", false, false];
-  logs.appendLine(`Info (${otherPath})`);
-
   for (let i = 0; i < cfgFiles.length; i++) {
     const cfgFile = cfgFiles[i];
-    logs.appendLine(`util.scanAnsibleCfg(${cfgFile})`);
     const cfgPath = untildify(cfgFile);
 
     const cfg = getValueByCfg(logs, cfgPath);
@@ -113,7 +125,7 @@ export function scanAnsibleCfg(
         !!cfg.defaults.vault_identity_list
       ) {
         logs.appendLine(
-          `Found 'vault_password_file' and 'vault_identity_list' within '${cfgPath}', add 'default' to vault id list`
+          `🔑 Found 'vault_password_file' and 'vault_identity_list' within '${cfgPath}', add 'default' to vault id list`
         );
         const vaultIdList = getVaultIdList(cfg.defaults.vault_identity_list);
         if (!vaultIdList.includes("default")) {
@@ -127,7 +139,7 @@ export function scanAnsibleCfg(
         return result;
       }
       if (cfg.defaults.vault_password_file) {
-        logs.appendLine(`Found 'vault_password_file' within '${cfgPath}'`);
+        logs.appendLine(`🔑 Found 'vault_password_file' within '${cfgPath}'`);
         result = [
           cfgPath,
           false,
@@ -136,7 +148,7 @@ export function scanAnsibleCfg(
         return result;
       }
       if (cfg.defaults.vault_identity_list) {
-        logs.appendLine(`Found 'vault_identity_list' within '${cfgPath}'`);
+        logs.appendLine(`🔑 Found 'vault_identity_list' within '${cfgPath}'`);
         const vaultIdList = getVaultIdList(cfg.defaults.vault_identity_list);
         result = [
           cfgPath,
@@ -149,7 +161,7 @@ export function scanAnsibleCfg(
   }
 
   logs.appendLine(
-    `Found no 'defaults.vault_password_file' or 'defaults.vault_identity_list' within config files`
+    `✖️ Found no 'defaults.vault_password_file' or 'defaults.vault_identity_list' within config files`
   );
   return result;
 }
@@ -176,7 +188,7 @@ export function readFile(logs: vscode.OutputChannel, path: any) {
 }
 
 const getValueByCfg = (logs: vscode.OutputChannel, path: any) => {
-  logs.appendLine(`Reading '${path}'...`);
+  logs.appendLine(`📎 Reading '${path}'...`);
 
   if (fs.existsSync(path)) {
     return ini.parse(fs.readFileSync(path, "utf-8"));

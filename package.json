@@ -1,6 +1,6 @@
 {
 	"name": "ansible-vault-vscode",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"publisher": "ipierre1",
 	"engines": {
 		"vscode": "^1.83.0"
@@ -54,7 +54,7 @@
 		"commands": [
 			{
 				"command": "extension.ansibleVault",
-				"title": "Encrypt & Decrypt with ansible-vault",
+				"title": "Ansible Vault - Encrypt & Decrypt",
 				"category": "Ansible Vault"
 			},
 			{
@@ -69,6 +69,11 @@
 			}
 		],
 		"menus": {
+			"explorer/context": [
+				{
+				  "command": "extension.ansibleVault"
+				}
+			],
 			"editor/context": [
 				{
 					"command": "extension.ansibleVault",
@@ -95,13 +100,13 @@
 			}
 		]
 	},
+	"markdown": "github",
+	"qna": "marketplace",
 	"activationEvents": [
 		"onCommand:extension.ansibleVault",
 		"onCommand:extension.ansibleVault.selectVaultId",
 		"onCommand:extension.ansibleVault.clearVaultIdSelection"
 	],
-	"markdown": "github",
-	"qna": "marketplace",
 	"dependencies": {
 		"@types/ini": "^4.1.0",
 		"@types/tmp": "^0.2.6",
