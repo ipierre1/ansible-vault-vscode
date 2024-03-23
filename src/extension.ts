@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import untildify from "untildify";
 import * as util from "./util";
 import { Vault } from "ansible-vault";
 
@@ -109,7 +108,7 @@ export function activate(context: vscode.ExtensionContext) {
           keypath = config.keyfile.trim();
           vaultIds = util.getVaultIdList(keypath);
         } else {
-          keypath = untildify(config.keyfile.trim());
+          keypath = util.untildify(config.keyfile.trim());
         }
       }
 

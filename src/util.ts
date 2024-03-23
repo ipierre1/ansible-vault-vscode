@@ -1,8 +1,17 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import untildify from "untildify";
 import * as ini from "ini";
+import * as os from 'os';
+
+export function untildify(pathWithTilde: string) {
+  const homeDirectory = os.homedir();
+	if (typeof pathWithTilde !== 'string') {
+		throw new TypeError(`Expected a string, got ${typeof pathWithTilde}`);
+	}
+
+	return homeDirectory ? pathWithTilde.replace(/^~(?=$|\/|\\)/, homeDirectory) : pathWithTilde;
+}
 
 export function getConfigFileInWorkspace(
   logs: vscode.OutputChannel,
