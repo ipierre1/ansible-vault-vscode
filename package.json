@@ -105,7 +105,8 @@
 	"activationEvents": [
 		"onCommand:extension.ansibleVault",
 		"onCommand:extension.ansibleVault.selectVaultId",
-		"onCommand:extension.ansibleVault.clearVaultIdSelection"
+		"onCommand:extension.ansibleVault.clearVaultIdSelection",
+		"onStartupFinished"
 	],
 	"dependencies": {
 		"@types/ini": "^4.1.0",

@@ -4,11 +4,124 @@ import { Vault } from "ansible-vault";
 
 const logs = vscode.window.createOutputChannel("Ansible Vault");
 
+class VaultedLineCodeLensProvider implements vscode.CodeLensProvider {
+  provideCodeLenses(
+    document: vscode.TextDocument,
+    token: vscode.CancellationToken
+  ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
+    if (document.languageId !== "yaml") {
+      return []; // Only activate for YAML files
+    }
+
+    const codeLenses: vscode.CodeLens[] = [];
+    let hasVaultIndicator = false;
+
+    for (let line = 0; line < document.lineCount; line++) {
+      const text = document.lineAt(line).text;
+
+      // Check for !vault | or $ANSIBLE_VAULT indicators
+      if (
+        text.includes("!vault |") ||
+        text.trim().startsWith("$ANSIBLE_VAULT;")
+      ) {
+        hasVaultIndicator = true;
+
+        if (text.includes("!vault |")) {
+          const range = new vscode.Range(line, 0, line, text.length);
+          const decryptAction = new vscode.CodeLens(range, {
+            title: "Decrypt",
+            command: "extension.decryptVaultedLine",
+            arguments: [document.uri, line],
+          });
+          codeLenses.push(decryptAction);
+        }
+      }
+    }
+
+    // // If the entire file is vaulted and there's no !vault | indicator, add CodeLens for entire document
+    // if (!hasVaultIndicator) {
+    //   const range = new vscode.Range(
+    //     0,
+    //     0,
+    //     document.lineCount - 1,
+    //     document.lineAt(document.lineCount - 1).text.length
+    //   );
+    //   const decryptAction = new vscode.CodeLens(range, {
+    //     title: "Decrypt Entire File",
+    //     command: "extension.decryptVaultedFile",
+    //     arguments: [document.uri],
+    //   });
+    //   codeLenses.push(decryptAction);
+    // }
+
+    return codeLenses;
+  }
+
+  resolveCodeLens(
+    codeLens: vscode.CodeLens,
+    token: vscode.CancellationToken
+  ): vscode.CodeLens | Thenable<vscode.CodeLens> {
+    return codeLens;
+  }
+}
+
 export function activate(context: vscode.ExtensionContext) {
   logs.appendLine(
     '🎉 Congratulations! Your extension "ansible-vault-vscode" is now active!'
   );
+  const codeLensProvider = new VaultedLineCodeLensProvider();
+  context.subscriptions.push(
+    vscode.languages.registerCodeLensProvider("yaml", codeLensProvider)
+  );
 
+  // Register the command to decrypt vaulted lines
+  const decryptCommand = vscode.commands.registerCommand(
+    "extension.decryptVaultedLine",
+    async (uri: vscode.Uri, line: number) => {
+      const editor = vscode.window.activeTextEditor;
+      const document = await vscode.workspace.openTextDocument(uri);
+      const text = document.getText();
+      const vaultStart = text.indexOf(
+        "!vault |",
+        document.offsetAt(new vscode.Position(line, 0))
+      );
+      if (editor && vaultStart !== -1) {
+        let vaultEnd = text.indexOf("$ANSIBLE_VAULT;", vaultStart);
+        if (vaultEnd === -1) {
+          // Vault is at the end of the file
+          vaultEnd = text.length;
+        } else {
+          // Move the vaultEnd to the end of the vaulted section
+          vaultEnd = text.indexOf("\n", vaultEnd); // Find the end of the current line
+          while (text.charAt(vaultEnd + 1) === " ") {
+            vaultEnd = text.indexOf("\n", vaultEnd + 1); // Skip lines starting with space
+          }
+          if (vaultEnd === -1) {
+            // Vault is at the end of the file
+            vaultEnd = text.length;
+          }
+          // Check if the content between vaultStart and vaultEnd is hexadecimal
+          const vaultContent = text.substring(vaultStart, vaultEnd);
+          const hexadecimalRegex = /^[0-9a-fA-F]+$/;
+          if (!hexadecimalRegex.test(vaultContent.replace(/\s/g, ""))) {
+            // Content is not valid hexadecimal, so set vaultEnd to the end of the line
+            vaultEnd = text.indexOf("\n", vaultEnd);
+            if (vaultEnd === -1) {
+              // Vault is at the end of the file
+              vaultEnd = text.length;
+            }
+          }
+        }
+        const selection = new vscode.Selection(
+          document.positionAt(vaultStart),
+          document.positionAt(vaultEnd)
+        );
+        editor.selection = selection; // Set selection to the vaulted section
+        vscode.commands.executeCommand("extension.ansibleVault"); // Call toggleEncrypt command
+      }
+    }
+  );
+  context.subscriptions.push(decryptCommand);
   const toggleEncrypt = async () => {
     logs.appendLine("🔐 Starting new encrypt or decrypt session.");
     const editor = vscode.window.activeTextEditor;
@@ -27,7 +140,10 @@ export function activate(context: vscode.ExtensionContext) {
     let pass: any = "";
 
     // Read `ansible.cfg`
-    const configFileInWorkspacePath = util.getConfigFileInWorkspace(logs, editor.document.uri);
+    const configFileInWorkspacePath = util.getConfigFileInWorkspace(
+      logs,
+      editor.document.uri
+    );
     let otherPath = util.findAnsibleCfgFile(
       logs,
       editor.document.uri.fsPath,
@@ -213,7 +329,10 @@ export function activate(context: vscode.ExtensionContext) {
     let configFileInWorkspacePath = undefined;
     let otherPath = undefined;
     if (editor) {
-      configFileInWorkspacePath = util.getConfigFileInWorkspace(logs, editor.document.uri);
+      configFileInWorkspacePath = util.getConfigFileInWorkspace(
+        logs,
+        editor.document.uri
+      );
       otherPath = util.findAnsibleCfgFile(
         logs,
         editor.document.uri.fsPath,
