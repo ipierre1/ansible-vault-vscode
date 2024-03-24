@@ -22,9 +22,15 @@ class VaultedLineCodeLensProvider implements vscode.CodeLensProvider {
         const decryptAction = new vscode.CodeLens(range, {
           title: "Decrypt",
           command: "extension.decryptVaultedLine",
-          arguments: [document.uri, line],
+          arguments: [document.uri, line, false],
         });
         codeLenses.push(decryptAction);
+        const rekeyAction = new vscode.CodeLens(range, {
+          title: "Rekey",
+          command: "extension.decryptVaultedLine",
+          arguments: [document.uri, line, true],
+        });
+        codeLenses.push(rekeyAction);
       } else {
         hasVaultIndicator = false;
       }
@@ -46,9 +52,14 @@ export function activate(context: vscode.ExtensionContext) {
     '🎉 Congratulations! Your extension "ansible-vault-vscode" is now active!'
   );
 
+  let rekeySession = false;
+
   const decryptCommand = vscode.commands.registerCommand(
     "extension.decryptVaultedLine",
-    async (uri: vscode.Uri, line: number) => {
+    async (uri: vscode.Uri, line: number, rekey: boolean) => {
+      if (rekey) {
+        rekeySession = true;
+      }
       const editor = vscode.window.activeTextEditor;
       const document = await vscode.workspace.openTextDocument(uri);
       const text = document.getText();
@@ -102,6 +113,16 @@ export function activate(context: vscode.ExtensionContext) {
 
   const toggleEncrypt = async () => {
     logs.appendLine("🔐 Starting new encrypt or decrypt session.");
+    await encryptDecrypt();
+  };
+
+  const toggleRekey = async () => {
+    logs.appendLine("🔐 Starting new rekey session.");
+    rekeySession = true;
+    await encryptDecrypt();
+  };
+
+  const encryptDecrypt = async () => {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       return;
@@ -235,7 +256,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         let encryptedText = await encrypt(text, pass, vaultId);
         encryptedText = "!vault |\n" + encryptedText;
-        editor.edit((editBuilder) => {
+        await editor.edit((editBuilder) => {
           editBuilder.replace(
             selection,
             encryptedText.replace(
@@ -257,7 +278,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (decryptedText === undefined) {
           vscode.window.showErrorMessage(`Decryption failed: Invalid Vault`);
         } else {
-          editor.edit((editBuilder) => {
+          await editor.edit((editBuilder) => {
             editBuilder.replace(selection, decryptedText);
           });
         }
@@ -270,7 +291,7 @@ export function activate(context: vscode.ExtensionContext) {
         logs.appendLine(`🔒 Encrypt entire file`);
 
         const encryptedText = await encrypt(content, pass, vaultId);
-        editor.edit((builder) => {
+        await editor.edit((builder) => {
           builder.replace(
             new vscode.Range(
               doc.lineAt(0).range.start,
@@ -289,7 +310,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (decryptedText === undefined) {
           vscode.window.showErrorMessage(`Decryption failed: Invalid Vault`);
         } else {
-          editor.edit((builder) => {
+          await editor.edit((builder) => {
             builder.replace(
               new vscode.Range(
                 doc.lineAt(0).range.start,
@@ -303,6 +324,10 @@ export function activate(context: vscode.ExtensionContext) {
           );
         }
       }
+    }
+    if (rekeySession) {
+      rekeySession = false;
+      await encryptDecrypt();
     }
   };
 
@@ -379,6 +404,12 @@ export function activate(context: vscode.ExtensionContext) {
     toggleEncrypt
   );
   context.subscriptions.push(disposable);
+
+  const disposableRekey = vscode.commands.registerCommand(
+    "extension.ansibleVault.rekey",
+    toggleRekey
+  );
+  context.subscriptions.push(disposableRekey);
 
   const selectVaultIdCommand = vscode.commands.registerCommand(
     "extension.ansibleVault.selectVaultId",
