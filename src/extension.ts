@@ -9,10 +9,6 @@ class VaultedLineCodeLensProvider implements vscode.CodeLensProvider {
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
-    if (document.languageId !== "yaml") {
-      return []; // Only activate for YAML files
-    }
-
     const codeLenses: vscode.CodeLens[] = [];
     let hasVaultIndicator = false;
 
@@ -52,7 +48,7 @@ export function activate(context: vscode.ExtensionContext) {
   const codeLensProvider = new VaultedLineCodeLensProvider();
   context.subscriptions.push(
     vscode.languages.registerCodeLensProvider(
-      { language: "yaml", scheme: "file", pattern: "**/*.{yaml,yml}" },
+      { scheme: "file", pattern: "**/*.{yaml,yml}" },
       codeLensProvider
     )
   );
@@ -207,6 +203,12 @@ export function activate(context: vscode.ExtensionContext) {
           );
           return;
         }
+        if (!pass) {
+          vscode.window.showErrorMessage(
+            "No password found for the specified vault ID."
+          );
+          return;
+        }
       }
     } else {
       if (config.keyFile) {
@@ -224,7 +226,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         if (!pass) {
           await vscode.window
-            .showInputBox({ prompt: "Enter the ansible-vault keyPass: " })
+            .showInputBox({ prompt: "Enter the ansible-vault password: " })
             .then((val) => {
               pass = val;
             });
