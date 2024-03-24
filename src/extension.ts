@@ -51,7 +51,10 @@ export function activate(context: vscode.ExtensionContext) {
   );
   const codeLensProvider = new VaultedLineCodeLensProvider();
   context.subscriptions.push(
-    vscode.languages.registerCodeLensProvider("yaml", codeLensProvider)
+    vscode.languages.registerCodeLensProvider(
+      { language: "yaml", scheme: "file", pattern: "**/*.{yaml,yml}" },
+      codeLensProvider
+    )
   );
 
   // Register the command to decrypt vaulted lines
@@ -182,7 +185,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Extract `ansible-vault` password
     if (keyInCfg) {
       vscode.window.showInformationMessage(
-        `Getting vault keyfile from ${keyInCfg}`
+        `Getting vault keyFile from ${keyInCfg}`
       );
       if (vaultPass) {
         if (vaultPass["default"] !== undefined) {
@@ -206,22 +209,22 @@ export function activate(context: vscode.ExtensionContext) {
         }
       }
     } else {
-      if (config.keyfile) {
-        if (isVaultIdList(config.keyfile)) {
-          keypath = config.keyfile.trim();
+      if (config.keyFile) {
+        if (isVaultIdList(config.keyFile)) {
+          keypath = config.keyFile.trim();
           vaultIds = util.getVaultIdList(keypath);
         } else {
-          keypath = util.untildify(config.keyfile.trim());
+          keypath = util.untildify(config.keyFile.trim());
         }
       }
 
       // Need user to input the ansible-vault pass
       if (!keypath) {
-        pass = config.keypass;
+        pass = config.keyPass;
 
         if (!pass) {
           await vscode.window
-            .showInputBox({ prompt: "Enter the ansible-vault keypass: " })
+            .showInputBox({ prompt: "Enter the ansible-vault keyPass: " })
             .then((val) => {
               pass = val;
             });
@@ -342,8 +345,8 @@ export function activate(context: vscode.ExtensionContext) {
       configFileInWorkspacePath
     );
     // Try to get vault list from workspace config
-    if (!keyInCfg && !!config.keyfile && isVaultIdList(config.keyfile)) {
-      vaultIds = util.getVaultIdList(config.keyfile);
+    if (!keyInCfg && !!config.keyFile && isVaultIdList(config.keyFile)) {
+      vaultIds = util.getVaultIdList(config.keyFile);
     }
     if (!vaultIds || !vaultIds.length) {
       vscode.window.showWarningMessage(

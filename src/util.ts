@@ -206,18 +206,18 @@ const getValueByCfg = (logs: vscode.OutputChannel, path: any) => {
   return undefined;
 };
 
-export function getVaultIdList(idlist: string) {
-  return idlist.split(",").map((element) => {
+export function getVaultIdList(idList: string) {
+  return idList.split(",").map((element) => {
     return element.trim().split("@")[0];
   });
 }
 
-export function getVaultIdPasswordDict(idlist: string): {
+export function getVaultIdPasswordDict(idList: string): {
   [key: string]: string;
 } {
   const vaultIdPasswordDict: { [key: string]: string } = {};
 
-  idlist.split(",").forEach((element) => {
+  idList.split(",").forEach((element) => {
     const [vaultName, passwordPath] = element.trim().split("@");
     vaultIdPasswordDict[vaultName.trim()] = passwordPath.trim();
   });
