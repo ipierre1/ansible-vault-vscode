@@ -45,15 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
   logs.appendLine(
     '🎉 Congratulations! Your extension "ansible-vault-vscode" is now active!'
   );
-  const codeLensProvider = new VaultedLineCodeLensProvider();
-  context.subscriptions.push(
-    vscode.languages.registerCodeLensProvider(
-      { scheme: "file", pattern: "**/*.{yaml,yml}" },
-      codeLensProvider
-    )
-  );
 
-  // Register the command to decrypt vaulted lines
   const decryptCommand = vscode.commands.registerCommand(
     "extension.decryptVaultedLine",
     async (uri: vscode.Uri, line: number) => {
@@ -107,7 +99,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }
   );
-  context.subscriptions.push(decryptCommand);
+
   const toggleEncrypt = async () => {
     logs.appendLine("🔐 Starting new encrypt or decrypt session.");
     const editor = vscode.window.activeTextEditor;
@@ -371,6 +363,16 @@ export function activate(context: vscode.ExtensionContext) {
     config.update("encryptVaultId", "", false);
     vscode.window.showInformationMessage(`'encrypt_vault_id' is set to ''`);
   };
+
+  const codeLensProvider = new VaultedLineCodeLensProvider();
+  context.subscriptions.push(
+    vscode.languages.registerCodeLensProvider(
+      { scheme: "file", pattern: "**/*.{yaml,yml}" },
+      codeLensProvider
+    )
+  );
+
+  context.subscriptions.push(decryptCommand);
 
   const disposable = vscode.commands.registerCommand(
     "extension.ansibleVault",
