@@ -2,6 +2,13 @@
 
 All notable changes to the `ansible-vault-vscode` extension will be documented in this file.
 
+## [1.0.6] - 2024-03-24
+
+### Feat
+
+- Rekey feature
+- Codelens when text is encrypted to propose decrypt and rekety feature to user.
+
 ## [1.0.5] - 2024-03-23
 
 ### Fixed

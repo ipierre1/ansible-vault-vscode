@@ -1,17 +1,128 @@
 import * as vscode from "vscode";
-import untildify from "untildify";
 import * as util from "./util";
 import { Vault } from "ansible-vault";
 
 const logs = vscode.window.createOutputChannel("Ansible Vault");
+
+class VaultedLineCodeLensProvider implements vscode.CodeLensProvider {
+  provideCodeLenses(
+    document: vscode.TextDocument,
+    token: vscode.CancellationToken
+  ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
+    const codeLenses: vscode.CodeLens[] = [];
+    let hasVaultIndicator = false;
+
+    for (let line = 0; line < document.lineCount; line++) {
+      const text = document.lineAt(line).text;
+
+      // Check for !vault | or $ANSIBLE_VAULT indicators
+      if (text.includes("!vault |") || text.startsWith("$ANSIBLE_VAULT;")) {
+        hasVaultIndicator = true;
+        const range = new vscode.Range(line, 0, line, text.length);
+        const decryptAction = new vscode.CodeLens(range, {
+          title: "Decrypt",
+          command: "extension.decryptVaultedLine",
+          arguments: [document.uri, line, false],
+        });
+        codeLenses.push(decryptAction);
+        const rekeyAction = new vscode.CodeLens(range, {
+          title: "Rekey",
+          command: "extension.decryptVaultedLine",
+          arguments: [document.uri, line, true],
+        });
+        codeLenses.push(rekeyAction);
+      } else {
+        hasVaultIndicator = false;
+      }
+    }
+
+    return codeLenses;
+  }
+
+  resolveCodeLens(
+    codeLens: vscode.CodeLens,
+    token: vscode.CancellationToken
+  ): vscode.CodeLens | Thenable<vscode.CodeLens> {
+    return codeLens;
+  }
+}
 
 export function activate(context: vscode.ExtensionContext) {
   logs.appendLine(
     '🎉 Congratulations! Your extension "ansible-vault-vscode" is now active!'
   );
 
+  let rekeySession = false;
+
+  const decryptCommand = vscode.commands.registerCommand(
+    "extension.decryptVaultedLine",
+    async (uri: vscode.Uri, line: number, rekey: boolean) => {
+      if (rekey) {
+        rekeySession = true;
+      }
+      const editor = vscode.window.activeTextEditor;
+      const document = await vscode.workspace.openTextDocument(uri);
+      const text = document.getText();
+      let vaultStart = text.indexOf(
+        "!vault |",
+        document.offsetAt(new vscode.Position(line, 0))
+      );
+      if (vaultStart === -1) {
+        vaultStart = 0;
+      }
+      if (editor && vaultStart !== -1) {
+        let vaultEnd = text.indexOf("$ANSIBLE_VAULT;", vaultStart);
+        if (vaultEnd === -1) {
+          // Vault is at the end of the file
+          vaultEnd = text.length;
+        } else {
+          // Move the vaultEnd to the end of the vaulted section
+          if (vaultStart === 0) {
+            vaultEnd = -1;
+          } else {
+            vaultEnd = text.indexOf("\n", vaultEnd); // Find the end of the current line
+            while (text.charAt(vaultEnd + 1) === " ") {
+              vaultEnd = text.indexOf("\n", vaultEnd + 1); // Skip lines starting with space
+            }
+          }
+          if (vaultEnd === -1) {
+            // Vault is at the end of the file
+            vaultEnd = text.length;
+          }
+          // Check if the content between vaultStart and vaultEnd is hexadecimal
+          const vaultContent = text.substring(vaultStart, vaultEnd);
+          const hexadecimalRegex = /^[0-9a-fA-F]+$/;
+          if (!hexadecimalRegex.test(vaultContent.replace(/\s/g, ""))) {
+            // Content is not valid hexadecimal, so set vaultEnd to the end of the line
+            vaultEnd = text.indexOf("\n", vaultEnd);
+            if (vaultEnd === -1) {
+              // Vault is at the end of the file
+              vaultEnd = text.length;
+            }
+          }
+        }
+        const selection = new vscode.Selection(
+          document.positionAt(vaultStart),
+          document.positionAt(vaultEnd)
+        );
+        editor.selection = selection; // Set selection to the vaulted section
+        vscode.commands.executeCommand("extension.ansibleVault"); // Call toggleEncrypt command
+      }
+    }
+  );
+
   const toggleEncrypt = async () => {
     logs.appendLine("🔐 Starting new encrypt or decrypt session.");
+    await encryptDecrypt();
+  };
+
+  const toggleRekey = async () => {
+    logs.appendLine("🔐 Starting new rekey session.");
+    rekeySession = true;
+    await encryptDecrypt();
+  };
+
+  const encryptDecrypt = async () => {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       return;
@@ -28,7 +139,10 @@ export function activate(context: vscode.ExtensionContext) {
     let pass: any = "";
 
     // Read `ansible.cfg`
-    const configFileInWorkspacePath = util.getConfigFileInWorkspace(logs, editor.document.uri);
+    const configFileInWorkspacePath = util.getConfigFileInWorkspace(
+      logs,
+      editor.document.uri
+    );
     let otherPath = util.findAnsibleCfgFile(
       logs,
       editor.document.uri.fsPath,
@@ -80,7 +194,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Extract `ansible-vault` password
     if (keyInCfg) {
       vscode.window.showInformationMessage(
-        `Getting vault keyfile from ${keyInCfg}`
+        `Getting vault keyFile from ${keyInCfg}`
       );
       if (vaultPass) {
         if (vaultPass["default"] !== undefined) {
@@ -102,24 +216,30 @@ export function activate(context: vscode.ExtensionContext) {
           );
           return;
         }
+        if (!pass) {
+          vscode.window.showErrorMessage(
+            "No password found for the specified vault ID."
+          );
+          return;
+        }
       }
     } else {
-      if (config.keyfile) {
-        if (isVaultIdList(config.keyfile)) {
-          keypath = config.keyfile.trim();
+      if (config.keyFile) {
+        if (isVaultIdList(config.keyFile)) {
+          keypath = config.keyFile.trim();
           vaultIds = util.getVaultIdList(keypath);
         } else {
-          keypath = untildify(config.keyfile.trim());
+          keypath = util.untildify(config.keyFile.trim());
         }
       }
 
       // Need user to input the ansible-vault pass
       if (!keypath) {
-        pass = config.keypass;
+        pass = config.keyPass;
 
         if (!pass) {
           await vscode.window
-            .showInputBox({ prompt: "Enter the ansible-vault keypass: " })
+            .showInputBox({ prompt: "Enter the ansible-vault password: " })
             .then((val) => {
               pass = val;
             });
@@ -136,7 +256,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         let encryptedText = await encrypt(text, pass, vaultId);
         encryptedText = "!vault |\n" + encryptedText;
-        editor.edit((editBuilder) => {
+        await editor.edit((editBuilder) => {
           editBuilder.replace(
             selection,
             encryptedText.replace(
@@ -158,7 +278,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (decryptedText === undefined) {
           vscode.window.showErrorMessage(`Decryption failed: Invalid Vault`);
         } else {
-          editor.edit((editBuilder) => {
+          await editor.edit((editBuilder) => {
             editBuilder.replace(selection, decryptedText);
           });
         }
@@ -171,7 +291,7 @@ export function activate(context: vscode.ExtensionContext) {
         logs.appendLine(`🔒 Encrypt entire file`);
 
         const encryptedText = await encrypt(content, pass, vaultId);
-        editor.edit((builder) => {
+        await editor.edit((builder) => {
           builder.replace(
             new vscode.Range(
               doc.lineAt(0).range.start,
@@ -190,7 +310,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (decryptedText === undefined) {
           vscode.window.showErrorMessage(`Decryption failed: Invalid Vault`);
         } else {
-          editor.edit((builder) => {
+          await editor.edit((builder) => {
             builder.replace(
               new vscode.Range(
                 doc.lineAt(0).range.start,
@@ -205,6 +325,10 @@ export function activate(context: vscode.ExtensionContext) {
         }
       }
     }
+    if (rekeySession) {
+      rekeySession = false;
+      await encryptDecrypt();
+    }
   };
 
   const selectVaultId = async () => {
@@ -214,7 +338,10 @@ export function activate(context: vscode.ExtensionContext) {
     let configFileInWorkspacePath = undefined;
     let otherPath = undefined;
     if (editor) {
-      configFileInWorkspacePath = util.getConfigFileInWorkspace(logs, editor.document.uri);
+      configFileInWorkspacePath = util.getConfigFileInWorkspace(
+        logs,
+        editor.document.uri
+      );
       otherPath = util.findAnsibleCfgFile(
         logs,
         editor.document.uri.fsPath,
@@ -237,8 +364,8 @@ export function activate(context: vscode.ExtensionContext) {
       configFileInWorkspacePath
     );
     // Try to get vault list from workspace config
-    if (!keyInCfg && !!config.keyfile && isVaultIdList(config.keyfile)) {
-      vaultIds = util.getVaultIdList(config.keyfile);
+    if (!keyInCfg && !!config.keyFile && isVaultIdList(config.keyFile)) {
+      vaultIds = util.getVaultIdList(config.keyFile);
     }
     if (!vaultIds || !vaultIds.length) {
       vscode.window.showWarningMessage(
@@ -262,11 +389,27 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.showInformationMessage(`'encrypt_vault_id' is set to ''`);
   };
 
+  const codeLensProvider = new VaultedLineCodeLensProvider();
+  context.subscriptions.push(
+    vscode.languages.registerCodeLensProvider(
+      { scheme: "file", pattern: "**/*.{yaml,yml}" },
+      codeLensProvider
+    )
+  );
+
+  context.subscriptions.push(decryptCommand);
+
   const disposable = vscode.commands.registerCommand(
     "extension.ansibleVault",
     toggleEncrypt
   );
   context.subscriptions.push(disposable);
+
+  const disposableRekey = vscode.commands.registerCommand(
+    "extension.ansibleVault.rekey",
+    toggleRekey
+  );
+  context.subscriptions.push(disposableRekey);
 
   const selectVaultIdCommand = vscode.commands.registerCommand(
     "extension.ansibleVault.selectVaultId",

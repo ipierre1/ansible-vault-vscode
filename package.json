@@ -1,6 +1,6 @@
 {
 	"name": "ansible-vault-vscode",
-	"version": "1.0.5",
+	"version": "1.0.6",
 	"publisher": "ipierre1",
 	"engines": {
 		"vscode": "^1.83.0"
@@ -21,6 +21,7 @@
 		"ansible-vault",
 		"decrypt",
 		"encrypt",
+		"rekey",
 		"multi-root ready"
 	],
 	"preview": false,
@@ -34,12 +35,12 @@
 					"default": "ansible-vault",
 					"description": "Full path of ansible-vault executable"
 				},
-				"ansibleVault.keypass": {
+				"ansibleVault.keyPass": {
 					"type": "string",
 					"default": "",
 					"description": "ansible-vault password text"
 				},
-				"ansibleVault.keyfile": {
+				"ansibleVault.keyFile": {
 					"type": "string",
 					"default": "",
 					"description": "ansible-vault password file path or vault-identity-list"
@@ -55,6 +56,11 @@
 			{
 				"command": "extension.ansibleVault",
 				"title": "Ansible Vault - Encrypt & Decrypt",
+				"category": "Ansible Vault"
+			},
+			{
+				"command": "extension.ansibleVault.rekey",
+				"title": "Ansible Vault - Rekey",
 				"category": "Ansible Vault"
 			},
 			{
@@ -78,6 +84,10 @@
 				{
 					"command": "extension.ansibleVault",
 					"when": "editorTextFocus"
+				},
+				{
+					"command": "extension.ansibleVault.rekey",
+					"when": "editorTextFocus"
 				}
 			]
 		},
@@ -86,6 +96,12 @@
 				"command": "extension.ansibleVault",
 				"key": "ctrl+alt+w",
 				"mac": "cmd+alt+w",
+				"when": "editorTextFocus"
+			},
+			{
+				"command": "extension.ansibleVault.rekey",
+				"key": "ctrl+alt+q",
+				"mac": "cmd+alt+q",
 				"when": "editorTextFocus"
 			},
 			{
@@ -105,15 +121,14 @@
 	"activationEvents": [
 		"onCommand:extension.ansibleVault",
 		"onCommand:extension.ansibleVault.selectVaultId",
-		"onCommand:extension.ansibleVault.clearVaultIdSelection"
+		"onCommand:extension.ansibleVault.clearVaultIdSelection",
+		"onStartupFinished"
 	],
 	"dependencies": {
 		"@types/ini": "^4.1.0",
-		"@types/tmp": "^0.2.6",
 		"ansible-vault": "^1.1.1",
 		"ini": "^4.1.2",
-		"tmp": "^0.2.3",
-		"untildify": "^4.0.0"
+		"untildify": "^5.0.0"
 	},
 	"devDependencies": {
 		"@types/node": "^20.11.30",

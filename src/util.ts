@@ -1,8 +1,17 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import untildify from "untildify";
 import * as ini from "ini";
+import * as os from 'os';
+
+export function untildify(pathWithTilde: string) {
+  const homeDirectory = os.homedir();
+	if (typeof pathWithTilde !== 'string') {
+		throw new TypeError(`Expected a string, got ${typeof pathWithTilde}`);
+	}
+
+	return homeDirectory ? pathWithTilde.replace(/^~(?=$|\/|\\)/, homeDirectory) : pathWithTilde;
+}
 
 export function getConfigFileInWorkspace(
   logs: vscode.OutputChannel,
@@ -197,18 +206,18 @@ const getValueByCfg = (logs: vscode.OutputChannel, path: any) => {
   return undefined;
 };
 
-export function getVaultIdList(idlist: string) {
-  return idlist.split(",").map((element) => {
+export function getVaultIdList(idList: string) {
+  return idList.split(",").map((element) => {
     return element.trim().split("@")[0];
   });
 }
 
-export function getVaultIdPasswordDict(idlist: string): {
+export function getVaultIdPasswordDict(idList: string): {
   [key: string]: string;
 } {
   const vaultIdPasswordDict: { [key: string]: string } = {};
 
-  idlist.split(",").forEach((element) => {
+  idList.split(",").forEach((element) => {
     const [vaultName, passwordPath] = element.trim().split("@");
     vaultIdPasswordDict[vaultName.trim()] = passwordPath.trim();
   });

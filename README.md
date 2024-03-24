@@ -38,8 +38,8 @@ This extension only requires Visual Studio Code. It does not rely on Python or A
 Customize the behavior of the Ansible Vault extension by configuring the following properties in your `settings.json`:
 
 - **ansibleVault.executable**: Specify the full path of the ansible-vault executable.
-- **ansibleVault.keypass**: Set the ansible-vault password text.
-- **ansibleVault.keyfile**: Specify the path to the ansible-vault password file or vault-identity-list.
+- **ansibleVault.keyPass**: Set the ansible-vault password text.
+- **ansibleVault.keyFile**: Specify the path to the ansible-vault password file or vault-identity-list.
 - **ansibleVault.encryptVaultId**: Define the ansible-vault vault ID for encryption.
 
 ### Available Commands
@@ -54,11 +54,17 @@ Access the following commands from the Command Palette:
 
 The extension adds options to the context menus in the Explorer and Editor views and provides keybindings for quick access to Ansible Vault commands.
 
+### Codelens
+
+Inline helpers are available when you vault is encrypted. Your editor language bust be `YAML` or `Ansible` (provided by official Ansible extension).
+
+![Demonstration of codelens](.github/assets/codelens.gif)
+
 ## Utilization of Ansible Configuration
 
 The extension locates ansible.cfg files in the project workspace and its parent directories to extract configuration settings related to Ansible Vault. It scans these files to find vault_password_file and vault_identity_list settings, which are then utilized for encryption and decryption.
 
-If the extension cannot find the specified path for the Ansible Vault password file, it will use the following default paths:
+If the extension cannot find the specified path for the Ansible Vault password file, it will use on POSIX the following default paths:
 
 1. `~/.ansible.cfg`
 2. `/etc/ansible.cfg`
