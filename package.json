@@ -1,6 +1,6 @@
 {
 	"name": "ansible-vault-vscode",
-	"version": "1.0.6",
+	"version": "1.0.7",
 	"publisher": "ipierre1",
 	"engines": {
 		"vscode": "^1.83.0"

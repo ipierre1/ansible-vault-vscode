@@ -2,6 +2,13 @@
 
 All notable changes to the `ansible-vault-vscode` extension will be documented in this file.
 
+## [1.0.7] - 2024-03-27
+
+### Fix
+
+- Codelens do not select write codeblock. Add indentation search and verifiy.
+- No password usecase, if no password is find just return error.
+
 ## [1.0.6] - 2024-03-24
 
 ### Feat
