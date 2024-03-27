@@ -81,7 +81,15 @@ export function activate(context: vscode.ExtensionContext) {
             vaultEnd = -1;
           } else {
             vaultEnd = text.indexOf("\n", vaultEnd); // Find the end of the current line
-            while (text.charAt(vaultEnd + 1) === " ") {
+            let indent = "";
+            if (text.charAt(vaultEnd + 1) === " ") {
+              let i = 1;
+              while (text.charAt(vaultEnd + i) === " ") {
+                indent += " ";
+                i++;
+              }
+            }
+            while (text.slice(vaultEnd + 1, vaultEnd + 1 + indent.length) === indent) {
               vaultEnd = text.indexOf("\n", vaultEnd + 1); // Skip lines starting with space
             }
           }
@@ -246,7 +254,10 @@ export function activate(context: vscode.ExtensionContext) {
         }
       }
     }
-
+    if (!pass) {
+      vscode.window.showErrorMessage(`No password provided.`);
+      return;
+    }
     // Go encrypt / decrypt
     if (text) {
       const type = getInlineTextType(text);
