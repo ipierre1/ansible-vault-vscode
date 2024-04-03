@@ -131,7 +131,7 @@
 		"untildify": "^5.0.0"
 	},
 	"devDependencies": {
-		"@types/node": "^20.12.2",
+		"@types/node": "^20.12.3",
 		"@types/vscode": "^1.83.0",
 		"@typescript-eslint/eslint-plugin": "^7.5.0",
 		"@typescript-eslint/parser": "^7.5.0",
