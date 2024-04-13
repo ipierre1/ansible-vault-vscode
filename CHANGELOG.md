@@ -2,6 +2,12 @@
 
 All notable changes to the `ansible-vault-vscode` extension will be documented in this file.
 
+## [1.0.8] - 2024-04-13
+
+### Bump
+
+- NPM dependencies.
+
 ## [1.0.7] - 2024-03-27
 
 ### Fix
