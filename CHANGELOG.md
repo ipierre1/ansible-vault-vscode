@@ -6,15 +6,15 @@ All notable changes to the `ansible-vault-vscode` extension will be documented i
 
 ### Fix
 
-- Codelens do not select write codeblock. Add indentation search and verifiy.
-- No password usecase, if no password is find just return error.
+- Codelens do not select write codeblock. Add indentation search and verify.
+- No password use case, if no password is find just return error.
 
 ## [1.0.6] - 2024-03-24
 
 ### Feat
 
 - Rekey feature
-- Codelens when text is encrypted to propose decrypt and rekety feature to user.
+- Codelens when text is encrypted to propose decrypt and rekey feature to user.
 
 ## [1.0.5] - 2024-03-23
 
@@ -26,8 +26,8 @@ All notable changes to the `ansible-vault-vscode` extension will be documented i
 ### Feat
 
 - Encrypt and decrypt from files explorer.
-- Improve docuementation.
-- Remove deprecated extension recommandation and add ESLint and Prettier.
+- Improve documentation.
+- Remove deprecated extension recommendation and add ESLint and Prettier.
 
 ## [1.0.4] - 2024-03-22
 
@@ -39,13 +39,13 @@ All notable changes to the `ansible-vault-vscode` extension will be documented i
 
 ### Fixed
 
-- Missing regex on inlines and downgrade VS Code version.
+- Missing regex on inline and downgrade VS Code version.
 
 ## [1.0.2] - 2024-03-18
 
 ### Fixed
 
-- Missing `!vault |` on inlines.
+- Missing `!vault |` on inline.
 
 ## [1.0.0] - 2024-03-15
 
