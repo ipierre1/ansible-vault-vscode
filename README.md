@@ -1,6 +1,6 @@
 # Ansible Vault for Visual Studio Code
 
-![Extension Version](https://vsmarketplacebadges.dev/version-short/ipierre1.ansible-vault-vscode.svg) ![Extension Installs](https://vsmarketplacebadges.dev/installs-short/ipierre1.ansible-vault-vscode.svg) ![Extension Downloads](https://vsmarketplacebadges.dev/downloads/ipierre1.ansible-vault-vscode.svg) ![Extension Tradring weekly](https://vsmarketplacebadges.dev/trending-weekly/ipierre1.ansible-vault-vscode.svg)
+![Extension Version](https://vsmarketplacebadges.dev/version-short/ipierre1.ansible-vault-vscode.png) ![Extension Installs](https://vsmarketplacebadges.dev/installs-short/ipierre1.ansible-vault-vscode.png) ![Extension Downloads](https://vsmarketplacebadges.dev/downloads/ipierre1.ansible-vault-vscode.png) ![Extension Tradring weekly](https://vsmarketplacebadges.dev/trending-weekly/ipierre1.ansible-vault-vscode.png)
 
 ## Overview
 
