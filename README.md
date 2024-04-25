@@ -1,5 +1,7 @@
 # Ansible Vault for Visual Studio Code
 
+![Extension Version](https://vsmarketplacebadges.dev/version-short/ipierre1.ansible-vault-vscode.svg) ![Extension Installs](https://vsmarketplacebadges.dev/installs-short/ipierre1.ansible-vault-vscode.svg) ![Extension Downloads](https://vsmarketplacebadges.dev/downloads/ipierre1.ansible-vault-vscode.svg) ![Extension Tradring weekly](https://vsmarketplacebadges.dev/trending-weekly/ipierre1.ansible-vault-vscode.svg)
+
 ## Overview
 
 The Ansible Vault VS Code Extension simplifies the encryption and decryption of Ansible Vault files within the Visual Studio Code environment. This extension empowers users to encrypt and decrypt text selections or entire files effortlessly, manage vault identities, and configure encryption settings directly within VS Code.
