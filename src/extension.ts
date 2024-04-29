@@ -89,7 +89,9 @@ export function activate(context: vscode.ExtensionContext) {
                 i++;
               }
             }
-            while (text.slice(vaultEnd + 1, vaultEnd + 1 + indent.length) === indent) {
+            while (
+              text.slice(vaultEnd + 1, vaultEnd + 1 + indent.length) === indent
+            ) {
               vaultEnd = text.indexOf("\n", vaultEnd + 1); // Skip lines starting with space
             }
           }
@@ -222,14 +224,19 @@ export function activate(context: vscode.ExtensionContext) {
           vscode.window.showErrorMessage(
             "No password found for the specified vault ID."
           );
-          return;
         }
         if (!pass) {
           vscode.window.showErrorMessage(
             "No password found for the specified vault ID."
           );
-          return;
         }
+      }
+      if (!pass) {
+        await vscode.window
+          .showInputBox({ prompt: "Enter the ansible-vault password: " })
+          .then((val) => {
+            pass = val;
+          });
       }
     } else {
       if (config.keyFile) {
@@ -265,15 +272,11 @@ export function activate(context: vscode.ExtensionContext) {
       if (type === "plaintext") {
         logs.appendLine(`🔒 Encrypt selected text`);
 
-        let encryptedText = await encrypt(text, pass, vaultId);
-        encryptedText = "!vault |\n" + encryptedText;
+        const encryptedText = await encrypt(text, pass, vaultId);
         await editor.edit((editBuilder) => {
           editBuilder.replace(
             selection,
-            encryptedText.replace(
-              /\n/g,
-              "\n" + " ".repeat(selection.start.character)
-            )
+            reindentText(encryptedText, getIndentationLevel(editor, selection), Number(editor.options.tabSize))
           );
         });
       } else if (type === "encrypted") {
@@ -449,6 +452,49 @@ const getInlineTextType = (text: string) => {
 // Returns whether the file is encrypted or in plain text.
 const getTextType = (text: string) => {
   return text.indexOf("$ANSIBLE_VAULT;") === 0 ? "encrypted" : "plaintext";
+};
+
+const getIndentationLevel = (
+  editor: vscode.TextEditor,
+  selection: vscode.Selection
+): number => {
+  if (!editor.options.tabSize) {
+    // according to VS code docs, tabSize is always defined when getting options of an editor
+    throw new Error(
+      "The `tabSize` option is not defined, this should never happen."
+    );
+  }
+  const startLine = editor.document.lineAt(selection.start.line).text;
+  const indentationMatches = startLine.match(/^\s*/);
+  const leadingWhitespaces = indentationMatches?.[0]?.length || 0;
+  return leadingWhitespaces / Number(editor.options.tabSize);
+};
+
+const reindentText = (
+  text: string,
+  indentationLevel: number,
+  tabSize: number,
+) => {
+  const leadingSpacesCount = (indentationLevel + 1) * tabSize;
+  const lines = text.split("\n");
+  let trailingNewlines = 0;
+  for (const line of lines.reverse()) {
+    if (line === "") {
+      trailingNewlines++;
+    } else {
+      break;
+    }
+  }
+  lines.reverse();
+  if (lines.length > 1) {
+    const leadingWhitespaces = " ".repeat(leadingSpacesCount);
+    const rejoinedLines = lines
+      .map((line) => `${leadingWhitespaces}${line}`)
+      .join("\n");
+    rejoinedLines.replace(/\n$/, "");
+    return `!vault |\n${rejoinedLines}`;
+  }
+  return text;
 };
 
 const encrypt = async (text: string, pass: string, encryptVaultId: any) => {
