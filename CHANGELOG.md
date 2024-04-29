@@ -2,6 +2,13 @@
 
 All notable changes to the `ansible-vault-vscode` extension will be documented in this file.
 
+## [1.0.9] - 2024-04-29
+
+### Feat
+
+- Prompt when vault password file not found.
+- Use Ansible official reindent function for encrypted multilines vaults.
+  
 ## [1.0.8] - 2024-04-13
 
 ### Bump
