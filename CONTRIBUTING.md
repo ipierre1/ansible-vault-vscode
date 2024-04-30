@@ -1,4 +1,4 @@
-# Contributing to API Factory - absenceBo
+# Contributing to Ansible Vault VS Code Extension
 
 First off, thank you for considering contributing to this project. Whether it's a bug report, feature request, or a code contribution, your help is appreciated.
 
