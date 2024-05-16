@@ -11,7 +11,7 @@ jobs:
         os: [ubuntu-latest]
     name: Test on ${{ matrix.os }}
     steps:
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         with:
           version: 7
           run_install: false
