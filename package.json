@@ -130,7 +130,7 @@
 		"ini": "^4.1.3"
 	},
 	"devDependencies": {
-		"@types/node": "^20.14.10",
+		"@types/node": "^20.14.11",
 		"@types/vscode": "^1.83.0",
 		"@typescript-eslint/eslint-plugin": "^7.15.0",
 		"@typescript-eslint/parser": "^7.15.0",
