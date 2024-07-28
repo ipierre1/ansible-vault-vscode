@@ -2,6 +2,12 @@
 
 All notable changes to the `ansible-vault-vscode` extension will be documented in this file.
 
+## [1.0.10] - 2024-07-28
+
+### Fix
+
+- VS Code config over Ansible config.
+
 ## [1.0.9] - 2024-04-29
 
 ### Feat
