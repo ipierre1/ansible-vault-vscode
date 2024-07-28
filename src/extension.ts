@@ -202,7 +202,25 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     // Extract `ansible-vault` password
-    if (keyInCfg) {
+    if (config.keyFile || config.keyPass) {
+      if (config.keyFile) {
+        if (isVaultIdList(config.keyFile)) {
+          keypath = config.keyFile.trim();
+          vaultIds = util.getVaultIdList(keypath);
+        } else {
+          keypath = util.untildify(config.keyFile.trim());
+        }
+        pass = util.findPassword(
+          logs,
+          editor.document.uri.fsPath,
+          keypath
+        );
+      }
+      if (config.keyPass) {
+        pass = config.keyPass;
+      }
+    }
+    else if (keyInCfg) {
       vscode.window.showInformationMessage(
         `Getting vault keyFile from ${keyInCfg}`
       );
@@ -238,36 +256,13 @@ export function activate(context: vscode.ExtensionContext) {
             pass = val;
           });
       }
-    } else {
-      logs.appendLine(config.keyFile);
-      if (config.keyFile) {
-        if (isVaultIdList(config.keyFile)) {
-          keypath = config.keyFile.trim();
-          vaultIds = util.getVaultIdList(keypath);
-        } else {
-          keypath = util.untildify(config.keyFile.trim());
-        }
-        pass = util.findPassword(
-          logs,
-          editor.document.uri.fsPath,
-          keypath
-        );
-      }
-      // Need user to input the ansible-vault pass
-      if (!keypath) {
-        pass = config.keyPass;
-
-        if (!pass) {
-          await vscode.window
-            .showInputBox({ prompt: "Enter the ansible-vault password: " })
-            .then((val) => {
-              pass = val;
-            });
-        }
-      }
     }
     if (!pass) {
-      vscode.window.showErrorMessage(`No password provided.`);
+      await vscode.window
+          .showInputBox({ prompt: "Enter the ansible-vault password: " })
+          .then((val) => {
+            pass = val;
+          });
       return;
     }
     // Go encrypt / decrypt
