@@ -239,6 +239,7 @@ export function activate(context: vscode.ExtensionContext) {
           });
       }
     } else {
+      logs.appendLine(config.keyFile);
       if (config.keyFile) {
         if (isVaultIdList(config.keyFile)) {
           keypath = config.keyFile.trim();
@@ -246,8 +247,12 @@ export function activate(context: vscode.ExtensionContext) {
         } else {
           keypath = util.untildify(config.keyFile.trim());
         }
+        pass = util.findPassword(
+          logs,
+          editor.document.uri.fsPath,
+          keypath
+        );
       }
-
       // Need user to input the ansible-vault pass
       if (!keypath) {
         pass = config.keyPass;

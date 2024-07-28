@@ -39,7 +39,6 @@ This extension only requires Visual Studio Code. It does not rely on Python or A
 
 Customize the behavior of the Ansible Vault extension by configuring the following properties in your `settings.json`:
 
-- **ansibleVault.executable**: Specify the full path of the ansible-vault executable.
 - **ansibleVault.keyPass**: Set the ansible-vault password text.
 - **ansibleVault.keyFile**: Specify the path to the ansible-vault password file or vault-identity-list.
 - **ansibleVault.encryptVaultId**: Define the ansible-vault vault ID for encryption.
