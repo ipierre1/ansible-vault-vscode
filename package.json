@@ -121,7 +121,7 @@
   ],
   "dependencies": {
     "@types/ini": "^4.1.1",
-    "ansible-vault": "^1.1.1",
+    "ansible-vault": "^1.3.0",
     "ini": "^5.0.0"
   },
   "devDependencies": {
