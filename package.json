@@ -2,9 +2,6 @@
   "name": "ansible-vault-vscode",
   "version": "1.0.10",
   "publisher": "ipierre1",
-  "engines": {
-    "vscode": "^1.83.0"
-  },
   "galleryBanner": {
     "color": "#e00",
     "theme": "light"
