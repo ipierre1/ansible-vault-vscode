@@ -125,13 +125,13 @@
     "ini": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.9.1",
-    "@types/vscode": "^1.83.0",
-    "@typescript-eslint/eslint-plugin": "^8.15.0",
-    "@typescript-eslint/parser": "^7.17.0",
-    "eslint": "^8.57.0",
-    "typescript": "^5.6.3",
-    "vsce": "^2.15.0"
+    "@types/node": "^22.13.9",
+    "@types/vscode": "^1.97.0",
+    "@typescript-eslint/eslint-plugin": "^8.26.0",
+    "@typescript-eslint/parser": "^8.26.0",
+    "eslint": "^9.21.0",
+    "typescript": "^5.8.2",
+    "vsce": "^1.97.0"
   },
   "scripts": {
     "vscode:package": "vsce package",
