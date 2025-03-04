@@ -3,7 +3,7 @@
   "version": "1.0.10",
   "publisher": "ipierre1",
   "engines": {
-    "vscode": "^1.83.0"
+    "vscode": "^1.97.0"
   },
   "galleryBanner": {
     "color": "#e00",
@@ -126,12 +126,12 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.9",
-    "@types/vscode": "^1.97.0",
+    "@types/vscode": "~1.97.0",
     "@typescript-eslint/eslint-plugin": "^8.26.0",
     "@typescript-eslint/parser": "^8.26.0",
+    "@vscode/vsce": "^1.97.0",
     "eslint": "^9.21.0",
-    "typescript": "^5.8.2",
-    "vsce": "^1.97.0"
+    "typescript": "^5.8.2"
   },
   "scripts": {
     "vscode:package": "vsce package",
