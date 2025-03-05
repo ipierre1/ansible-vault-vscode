@@ -263,7 +263,7 @@ export function activate(context: vscode.ExtensionContext) {
           .then((val) => {
             pass = val;
           });
-      return;
+      // return;
     }
     // Go encrypt / decrypt
     if (text) {
