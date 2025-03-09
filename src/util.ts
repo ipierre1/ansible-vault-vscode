@@ -145,7 +145,8 @@ export function findPassword(
   vaultPassFile: string
 ) {
   if (fs.existsSync(vaultPassFile)) {
-    return fs.readFileSync(vaultPassFile, "utf-8");
+    let content = fs.readFileSync(vaultPassFile, "utf-8")
+    return content.replace(/[\n\r\t]/gm, "");
   }
   const passPath = findAnsibleCfgFile(
     logs,
