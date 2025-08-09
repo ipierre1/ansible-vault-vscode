@@ -107,7 +107,7 @@ export function scanAnsibleCfg(
         logs.appendLine(
           `🔑 Found 'vault_password_file' and 'vault_identity_list' within '${cfgPath}', add 'default' to vault id list`
         );
-        let vaultIdList = getVaultIdList(cfg.defaults.vault_identity_list);
+        const vaultIdList = getVaultIdList(cfg.defaults.vault_identity_list);
         if (!vaultIdList.includes("default")) {
           vaultIdList.push("default");
         }
@@ -145,7 +145,7 @@ export function findPassword(
   vaultPassFile: string
 ) {
   if (fs.existsSync(vaultPassFile)) {
-    let content = fs.readFileSync(vaultPassFile, "utf-8")
+    const content = fs.readFileSync(vaultPassFile, "utf-8");
     return content.replace(/[\n\r\t]/gm, "");
   }
   const passPath = findAnsibleCfgFile(

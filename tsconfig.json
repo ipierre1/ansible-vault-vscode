@@ -1,27 +1,21 @@
 {
-	"compilerOptions": {
-		"esModuleInterop": true, /* because of untildify */
-		"module": "commonjs",
-		"target": "es6",
-		"outDir": "out",
-		"lib": [
-			"es6"
-		],
-		"sourceMap": true,
-		"forceConsistentCasingInFileNames": true,
-		"removeComments": true,
-		"rootDir": "src",
-		"strict": true   /* enable all strict type-checking options */
-		/* Additional Checks */
-		// "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
-		// "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
-		// "noUnusedParameters": true,  /* Report errors on unused parameters. */
-	},
-	"exclude": ["node_modules", ".vscode-test", "test-fixtures"],
-	"include": [
-	  "src/**/*.ts",
-	  "./node_modules/vscode/vscode.d.ts",
-	  "./node_modules/vscode/lib/*",
-	  ".eslintrc.js"
-	]
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "target": "es6",
+    "outDir": "out",
+    "lib": ["es6"],
+    "sourceMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "removeComments": true,
+    "rootDir": "src",
+    "strict": true
+  },
+  "exclude": ["node_modules", ".vscode-test", "test-fixtures"],
+  "include": [
+    "src/**/*.ts",
+    "./node_modules/vscode/vscode.d.ts",
+    "./node_modules/vscode/lib/*",
+    "eslint.config.js"
+  ]
 }
