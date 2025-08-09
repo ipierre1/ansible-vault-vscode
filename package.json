@@ -3,7 +3,7 @@
   "version": "1.0.12",
   "publisher": "ipierre1",
   "engines": {
-    "vscode": "^1.97.0"
+    "vscode": "^1.102.0"
   },
   "galleryBanner": {
     "color": "#e00",
@@ -114,9 +114,6 @@
   "markdown": "github",
   "qna": "marketplace",
   "activationEvents": [
-    "onCommand:extension.ansibleVault",
-    "onCommand:extension.ansibleVault.selectVaultId",
-    "onCommand:extension.ansibleVault.clearVaultIdSelection",
     "onStartupFinished"
   ],
   "dependencies": {
