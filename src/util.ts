@@ -119,10 +119,12 @@ export function scanAnsibleCfg(
       }
       if (cfg.defaults.vault_password_file) {
         logs.appendLine(`🔑 Found 'vault_password_file' within '${cfgPath}'`);
+        logs.appendLine(`▶️ Processing '${cfg.defaults.vault_password_file}'`);
         return [cfgPath, false, { default: cfg.defaults.vault_password_file }];
       }
       if (cfg.defaults.vault_identity_list) {
         logs.appendLine(`🔑 Found 'vault_identity_list' within '${cfgPath}'`);
+        logs.appendLine(`▶️ Processing '${cfg.defaults.vault_identity_list}'`);
         const vaultIdList = getVaultIdList(cfg.defaults.vault_identity_list);
         return [
           cfgPath,
