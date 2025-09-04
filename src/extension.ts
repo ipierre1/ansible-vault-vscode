@@ -1,5 +1,17 @@
 import * as vscode from "vscode";
-import * as util from "./util";
+import {
+  extractVaultId,
+  findAnsibleCfgFile,
+  findPassword,
+  getConfigFileInWorkspace,
+  getInlineTextType,
+  getTextType,
+  getVaultIdList,
+  isVaultIdList,
+  scanAnsibleCfg,
+  untildify,
+  verifyAnsibleDirectory,
+} from "./util";
 import { Vault } from "ansible-vault";
 
 const logs = vscode.window.createOutputChannel("Ansible Vault");
@@ -149,29 +161,25 @@ export function activate(context: vscode.ExtensionContext) {
     let pass: any = "";
 
     // Read `ansible.cfg`
-    const configFileInWorkspacePath = util.getConfigFileInWorkspace(
+    const configFileInWorkspacePath = getConfigFileInWorkspace(
       logs,
       editor.document.uri
     );
-    let otherPath = util.findAnsibleCfgFile(
+    let otherPath = findAnsibleCfgFile(
       logs,
       editor.document.uri.fsPath,
       "ansible.cfg"
     );
 
     if (otherPath !== undefined) {
-      otherPath = util.verifyAnsibleDirectory(
-        logs,
-        editor.document.uri,
-        otherPath
-      );
+      otherPath = verifyAnsibleDirectory(logs, editor.document.uri, otherPath);
     }
 
     let keyInCfg: string,
       vaultIds: false | Array<string>,
       vaultPass: false | { [key: string]: string };
     // eslint-disable-next-line prefer-const
-    [keyInCfg, vaultIds, vaultPass] = util.scanAnsibleCfg(
+    [keyInCfg, vaultIds, vaultPass] = scanAnsibleCfg(
       logs,
       otherPath,
       configFileInWorkspacePath
@@ -206,33 +214,28 @@ export function activate(context: vscode.ExtensionContext) {
       if (config.keyFile) {
         if (isVaultIdList(config.keyFile)) {
           keypath = config.keyFile.trim();
-          vaultIds = util.getVaultIdList(keypath);
+          vaultIds = getVaultIdList(keypath);
         } else {
-          keypath = util.untildify(config.keyFile.trim());
+          keypath = untildify(config.keyFile.trim());
         }
-        pass = util.findPassword(
-          logs,
-          editor.document.uri.fsPath,
-          keypath
-        );
+        pass = findPassword(logs, editor.document.uri.fsPath, keypath);
       }
       if (config.keyPass) {
         pass = config.keyPass;
       }
-    }
-    else if (keyInCfg) {
+    } else if (keyInCfg) {
       vscode.window.showInformationMessage(
         `Getting vault keyFile from ${keyInCfg}`
       );
       if (vaultPass) {
         if (vaultPass["default"] !== undefined) {
-          pass = util.findPassword(
+          pass = findPassword(
             logs,
             editor.document.uri.fsPath,
             vaultPass["default"]
           );
         } else if (vaultPass[vaultId] !== undefined) {
-          pass = util.findPassword(
+          pass = findPassword(
             logs,
             editor.document.uri.fsPath,
             vaultPass[vaultId]
@@ -259,10 +262,10 @@ export function activate(context: vscode.ExtensionContext) {
     }
     if (!pass) {
       await vscode.window
-          .showInputBox({ prompt: "Enter the ansible-vault password: " })
-          .then((val) => {
-            pass = val;
-          });
+        .showInputBox({ prompt: "Enter the ansible-vault password: " })
+        .then((val) => {
+          pass = val;
+        });
       // return;
     }
     // Go encrypt / decrypt
@@ -273,12 +276,22 @@ export function activate(context: vscode.ExtensionContext) {
         logs.appendLine(`🔒 Encrypt selected text`);
 
         const encryptedText = await encrypt(text, pass, vaultId);
-        await editor.edit((editBuilder) => {
-          editBuilder.replace(
-            selection,
-            reindentText(encryptedText, getIndentationLevel(editor, selection), Number(editor.options.tabSize))
+        if (encryptedText) {
+          await editor.edit((editBuilder) => {
+            editBuilder.replace(
+              selection,
+              reindentText(
+                encryptedText,
+                getIndentationLevel(editor, selection),
+                Number(editor.options.tabSize)
+              )
+            );
+          });
+        } else {
+          vscode.window.showErrorMessage(
+            "Encryption failed: No encrypted text returned."
           );
-        });
+        }
       } else if (type === "encrypted") {
         logs.appendLine(`🔓 Decrypt selected text`);
         const decryptedText = await decrypt(
@@ -305,15 +318,21 @@ export function activate(context: vscode.ExtensionContext) {
         logs.appendLine(`🔒 Encrypt entire file`);
 
         const encryptedText = await encrypt(content, pass, vaultId);
-        await editor.edit((builder) => {
-          builder.replace(
-            new vscode.Range(
-              doc.lineAt(0).range.start,
-              doc.lineAt(doc.lineCount - 1).range.end
-            ),
-            encryptedText
+        if (encryptedText) {
+          await editor.edit((builder) => {
+            builder.replace(
+              new vscode.Range(
+                doc.lineAt(0).range.start,
+                doc.lineAt(doc.lineCount - 1).range.end
+              ),
+              encryptedText
+            );
+          });
+        } else {
+          vscode.window.showErrorMessage(
+            "Encryption failed: No encrypted text returned."
           );
-        });
+        }
 
         vscode.window.showInformationMessage(
           `File encrypted: '${doc.fileName}'`
@@ -352,11 +371,11 @@ export function activate(context: vscode.ExtensionContext) {
     let configFileInWorkspacePath = undefined;
     let otherPath = undefined;
     if (editor) {
-      configFileInWorkspacePath = util.getConfigFileInWorkspace(
+      configFileInWorkspacePath = getConfigFileInWorkspace(
         logs,
         editor.document.uri
       );
-      otherPath = util.findAnsibleCfgFile(
+      otherPath = findAnsibleCfgFile(
         logs,
         editor.document.uri.fsPath,
         "ansible.cfg"
@@ -372,14 +391,14 @@ export function activate(context: vscode.ExtensionContext) {
       vaultIds: false | Array<string>,
       vaultPass: false | { [key: string]: string };
     // eslint-disable-next-line prefer-const
-    [keyInCfg, vaultIds, vaultPass] = util.scanAnsibleCfg(
+    [keyInCfg, vaultIds, vaultPass] = scanAnsibleCfg(
       logs,
       otherPath,
       configFileInWorkspacePath
     );
     // Try to get vault list from workspace config
     if (!keyInCfg && !!config.keyFile && isVaultIdList(config.keyFile)) {
-      vaultIds = util.getVaultIdList(config.keyFile);
+      vaultIds = getVaultIdList(config.keyFile);
     }
     if (!vaultIds || !vaultIds.length) {
       vscode.window.showWarningMessage(
@@ -440,26 +459,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {}
 
-// Returns whether the selected text is encrypted or in plain text.
-const getInlineTextType = (text: string) => {
-  if (text.trim().startsWith("!vault |")) {
-    text = text.replace("!vault |", "");
-  }
-
-  return text.trim().startsWith("$ANSIBLE_VAULT;") ? "encrypted" : "plaintext";
-};
-
-// Returns whether the file is encrypted or in plain text.
-const getTextType = (text: string) => {
-  return text.indexOf("$ANSIBLE_VAULT;") === 0 ? "encrypted" : "plaintext";
-};
-
 const getIndentationLevel = (
   editor: vscode.TextEditor,
   selection: vscode.Selection
 ): number => {
   if (!editor.options.tabSize) {
-    // according to VS code docs, tabSize is always defined when getting options of an editor
     throw new Error(
       "The `tabSize` option is not defined, this should never happen."
     );
@@ -473,7 +477,7 @@ const getIndentationLevel = (
 const reindentText = (
   text: string,
   indentationLevel: number,
-  tabSize: number,
+  tabSize: number
 ) => {
   const leadingSpacesCount = (indentationLevel + 1) * tabSize;
   const lines = text.split("\n");
@@ -499,39 +503,32 @@ const reindentText = (
 
 const encrypt = async (text: string, pass: string, encryptVaultId: any) => {
   const vault = new Vault({ password: pass });
-
   try {
     if (encryptVaultId) {
-      const encryptedContent = await vault.encrypt(text, encryptVaultId);
-      return <string>encryptedContent;
+      return (await vault.encrypt(text, encryptVaultId)) as string;
     } else {
-      const encryptedContent = await vault.encrypt(text, "");
-      return <string>encryptedContent;
+      return (await vault.encrypt(text, "")) as string;
     }
   } catch (error: any) {
-    console.error("Encryption failed:", error);
+    logs.appendLine(`Encryption failed: ${error.message}`);
     vscode.window.showErrorMessage(`Encryption failed: ${error.message}`);
-    throw error;
+    return undefined;
   }
 };
 
 const decrypt = async (text: string, pass: string, encryptVaultId: any) => {
   const vault = new Vault({ password: pass });
-  let decryptedContent = undefined;
-
   try {
     if (encryptVaultId) {
-      decryptedContent = await vault.decrypt(text, encryptVaultId);
+      return (await vault.decrypt(text, encryptVaultId)) as string;
     } else {
-      decryptedContent = await vault.decrypt(text, "");
+      return (await vault.decrypt(text, "")) as string;
     }
   } catch (error: any) {
-    console.error("Decryption failed:", error);
+    logs.appendLine(`❌ Decryption failed: ${error.message}`);
     vscode.window.showErrorMessage(`Decryption failed: ${error.message}`);
-    // Instead of throwing an error, return the original text
-    return text;
+    return undefined;
   }
-  return <string>decryptedContent;
 };
 
 const encryptVaultId = async (vaultIds: false | Array<string>) => {
@@ -556,32 +553,4 @@ const chooseVaultId = async (vaultIds: Array<string>) => {
     placeHolder: "Choose ansible vault ID for encryption: ",
     canPickMany: false,
   });
-};
-
-const isVaultIdList = (string: string) => {
-  return string.includes("@");
-};
-
-const extractVaultId = (encryptedContent: string): string | undefined => {
-  // Remove leading "!vault |" if present
-  encryptedContent = encryptedContent
-    .replace("!vault |", "")
-    .trim()
-    .replace(/[^\S\r\n]+/gm, "");
-
-  // Remove whitespace and escape sequences
-  const [header, ...hexValues] = encryptedContent.split(/\r?\n/);
-
-  // Check if the content starts with $ANSIBLE_VAULT
-  if (header.startsWith("$ANSIBLE_VAULT")) {
-    // If found, split the content by semicolon to extract the parts
-    const parts = header.split(";");
-    // Check if the parts contain the required information
-    if (parts.length >= 4) {
-      // Extract the vault ID from the parts
-      return parts[3];
-    }
-  }
-  // Return undefined if the content doesn't match the expected format
-  return undefined;
 };

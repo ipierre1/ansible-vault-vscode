@@ -4,6 +4,37 @@ import * as path from "path";
 import * as ini from "ini";
 import * as os from "os";
 
+// --- Utility functions moved from extension.ts ---
+export const getInlineTextType = (text: string) => {
+  if (text.trim().startsWith("!vault |")) {
+    text = text.replace("!vault |", "");
+  }
+  return text.trim().startsWith("$ANSIBLE_VAULT;") ? "encrypted" : "plaintext";
+};
+
+export const getTextType = (text: string) => {
+  return text.indexOf("$ANSIBLE_VAULT;") === 0 ? "encrypted" : "plaintext";
+};
+
+export const extractVaultId = (encryptedContent: string): string | undefined => {
+  encryptedContent = encryptedContent
+    .replace("!vault |", "")
+    .trim()
+    .replace(/[^\S\r\n]+/gm, "");
+  const [header, ...hexValues] = encryptedContent.split(/\r?\n/);
+  if (header.startsWith("$ANSIBLE_VAULT")) {
+    const parts = header.split(";");
+    if (parts.length >= 4) {
+      return parts[3];
+    }
+  }
+  return undefined;
+};
+
+export const isVaultIdList = (string: string) => {
+  return string.includes("@");
+};
+
 export function untildify(pathWithTilde: string) {
   const homeDirectory = os.homedir();
   if (typeof pathWithTilde !== "string") {
