@@ -1,16 +1,6 @@
-## [1.1.0](https://github.com/ipierre1/ansible-vault-vscode/compare/v1.0.12...v1.1.0) (2025-08-09)
+## [1.0.13] - 2025-09-04
 
-### CI/CD
-
-* upgrade packages and fix lint issues ([4a54c99](https://github.com/ipierre1/ansible-vault-vscode/commit/4a54c9987f8a2f57338b7b46c90ad134b9795595))
-
-### Features
-
-* migrate eslint ([6f8619e](https://github.com/ipierre1/ansible-vault-vscode/commit/6f8619e69b06598b2a4b4309ed0f0a78be7dc581))
-
-### Bug Fixes
-
-* vscode engine version and action for protected branches ([57a15c6](https://github.com/ipierre1/ansible-vault-vscode/commit/57a15c67fd8b1098127bb27cbb64155433ac2b57))
+- Updates deps and error catching.
 
 ## [1.0.10] - 2024-07-28
 
