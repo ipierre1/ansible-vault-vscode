@@ -3,7 +3,7 @@
   "version": "1.0.12",
   "publisher": "ipierre1",
   "engines": {
-    "vscode": "^1.102.0"
+    "vscode": "^1.103.0"
   },
   "galleryBanner": {
     "color": "#e00",
@@ -133,7 +133,7 @@
     "@types/node": "^24.3.1",
     "@types/vscode": "^1.103.0",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
-    "@typescript-eslint/parser": "^8.39.0",
+    "@typescript-eslint/parser": "^8.42.0",
     "@vscode/vsce": "^3.6.0",
     "conventional-changelog-conventionalcommits": "^9.1.0",
     "eslint": "^9.34.0",
