@@ -1,3 +1,13 @@
+## [1.2.0](https://github.com/ipierre1/ansible-vault-vscode/compare/v1.1.0...v1.2.0) (2025-09-04)
+
+### CI/CD
+
+* update version to 1.0.13 and revise changelog ([21faf12](https://github.com/ipierre1/ansible-vault-vscode/commit/21faf12ae192b3193b119f5c1fe309104f4f936d))
+
+### Features
+
+* enhance logging for vault password and identity list processing in scanAnsibleCfg ([0f3f312](https://github.com/ipierre1/ansible-vault-vscode/commit/0f3f312d14aafc0ecb13033030c0f784044a3f6c))
+
 ## [1.0.13] - 2025-09-04
 
 - Updates deps and error catching.
