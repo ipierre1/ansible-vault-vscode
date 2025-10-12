@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/ipierre1/ansible-vault-vscode/compare/v1.2.0...v1.3.0) (2025-10-12)
+
+### Features
+
+* enhance Dependabot workflow to auto-merge approved pull requests ([d7e68a3](https://github.com/ipierre1/ansible-vault-vscode/commit/d7e68a3cf30c0e8a13d8482f61a1d9fdc94e496e))
+
 ## [1.2.0](https://github.com/ipierre1/ansible-vault-vscode/compare/v1.1.0...v1.2.0) (2025-09-04)
 
 ### CI/CD
