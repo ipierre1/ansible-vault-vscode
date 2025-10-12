@@ -1,3 +1,9 @@
+## [1.3.1](https://github.com/ipierre1/ansible-vault-vscode/compare/v1.3.0...v1.3.1) (2025-10-12)
+
+### Bug Fixes
+
+* update permissions in dependabot workflow to ensure content write access ([3618055](https://github.com/ipierre1/ansible-vault-vscode/commit/36180550bedc4a7585a67e27ecdbfac714adbbd4))
+
 ## [1.3.0](https://github.com/ipierre1/ansible-vault-vscode/compare/v1.2.0...v1.3.0) (2025-10-12)
 
 ### Features
