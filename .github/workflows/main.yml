@@ -22,6 +22,11 @@ jobs:
       - run: /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 & echo "Started xvfb"
         shell: bash
         if: ${{ success() && matrix.os == 'ubuntu-latest' }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
       - run: npm install
       - name: Cache node modules
         uses: actions/cache@v4
@@ -45,6 +50,11 @@ jobs:
     name: Package
     steps:
       - uses: actions/checkout@v5
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
       - run: npm install
       - name: Cache node modules
         uses: actions/cache@v4
@@ -63,7 +73,8 @@ jobs:
       - run: vsce package
       - run: echo "VSIX_PATH=$(find . -maxdepth 1 -type f -iname "*.vsix" | head -1)" >> $GITHUB_ENV
       - run: echo "VSIX_NAME=$(basename $(find . -maxdepth 1 -type f -iname "*.vsix" | head -1))" >> $GITHUB_ENV
-      - uses: actions/upload-artifact@v5
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v5
         with:
           path: ${{ env.VSIX_PATH }}
           name: ${{ env.VSIX_NAME }}
@@ -96,6 +107,11 @@ jobs:
       - run: vsce package
       - run: echo "VSIX_PATH=$(find . -maxdepth 1 -type f -iname "*.vsix" | head -1)" >> $GITHUB_ENV
       - run: echo "VSIX_NAME=$(basename $(find . -maxdepth 1 -type f -iname "*.vsix" | head -1))" >> $GITHUB_ENV
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v5
+        with:
+          path: ${{ env.VSIX_PATH }}
+          name: ${{ env.VSIX_NAME }}
       - uses: actions/create-release@v1
         id: create_release
         env:
