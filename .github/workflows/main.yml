@@ -79,6 +79,7 @@ jobs:
           path: ${{ env.VSIX_PATH }}
           name: ${{ env.VSIX_NAME }}
   dependabot:
+    needs: package
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:

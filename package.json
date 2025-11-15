@@ -3,7 +3,7 @@
   "version": "1.0.13",
   "publisher": "ipierre1",
   "engines": {
-    "vscode": "^1.103.0"
+    "vscode": "^1.106.0"
   },
   "galleryBanner": {
     "color": "#e00",
