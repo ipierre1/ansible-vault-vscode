@@ -131,7 +131,7 @@
     "@semantic-release/github": "^12.0.6",
     "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/node": "^25.3.2",
-    "@types/vscode": "^1.106.1",
+    "@types/vscode": "^1.109.0",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
     "@vscode/vsce": "^3.7.1",
