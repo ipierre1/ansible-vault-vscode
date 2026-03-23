@@ -1,3 +1,7 @@
+## [1.3.2]
+
+- Added the feature that variables found in ansible.cfg are expanded. So the specification of vault_password_file can contain variables like ${HOME}
+
 ## [1.3.1](https://github.com/ipierre1/ansible-vault-vscode/compare/v1.3.0...v1.3.1) (2025-10-12)
 
 ### Bug Fixes
