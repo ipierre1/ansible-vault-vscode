@@ -5,6 +5,24 @@ import * as ini from "ini";
 import * as os from "os";
 
 // --- Utility functions moved from extension.ts ---
+function expandEnvVars(input: string): string {
+  return input.replace(/\$(\w+)|\${(\w+)}/g, (_, var1, var2) => {
+    const envVar = var1 || var2;
+    return process.env[envVar] ?? "";
+  });
+}
+
+function expandUser(path: string): string {
+  if (path.startsWith("~/")) {
+    return path.replace("~", process.env.HOME || process.env.USERPROFILE || "");
+  }
+  return path;
+}
+
+function expandAll(path: string): string {
+  return expandEnvVars(expandUser(path));
+}
+
 export const getInlineTextType = (text: string) => {
   if (text.trim().startsWith("!vault |")) {
     text = text.replace("!vault |", "");
@@ -177,14 +195,17 @@ export function findPassword(
   configFileInWorkspacePath: string,
   vaultPassFile: string
 ) {
-  if (fs.existsSync(vaultPassFile)) {
-    const content = fs.readFileSync(vaultPassFile, "utf-8");
+  // Expand environment variables
+  const expandedPassFile = expandAll(vaultPassFile.trim());
+
+  if (fs.existsSync(expandedPassFile)) {
+    const content = fs.readFileSync(expandedPassFile, "utf-8");
     return content.replace(/[\n\r\t]/gm, "");
   }
   const passPath = findAnsibleCfgFile(
     logs,
     configFileInWorkspacePath,
-    vaultPassFile.trim()
+    expandedPassFile
   );
   return readFile(logs, passPath);
 }
