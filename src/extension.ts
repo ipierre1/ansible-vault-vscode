@@ -8,6 +8,7 @@ import {
   getTextType,
   getVaultIdList,
   isVaultIdList,
+  reindentText,
   scanAnsibleCfg,
   untildify,
   verifyAnsibleDirectory,
@@ -419,22 +420,6 @@ const getIndentationLevel = (
   return leadingWhitespaces / Number(editor.options.tabSize);
 };
 
-const reindentText = (
-  text: string,
-  indentationLevel: number,
-  tabSize: number,
-): string => {
-  const indent = " ".repeat((indentationLevel + 1) * tabSize);
-  const lines = text.split("\n");
-  // Strip trailing empty lines that ansible-vault appends
-  while (lines.length > 0 && lines[lines.length - 1] === "") {
-    lines.pop();
-  }
-  if (lines.length > 1) {
-    return `!vault |\n${lines.map((line) => `${indent}${line}`).join("\n")}`;
-  }
-  return text;
-};
 
 const encrypt = async (
   text: string,

@@ -12,7 +12,7 @@
     "rootDir": "src",
     "strict": true
   },
-  "exclude": ["node_modules", ".vscode-test", "test-fixtures"],
+  "exclude": ["node_modules", ".vscode-test", "test-fixtures", "src/test"],
   "include": [
     "src/**/*.ts",
     "./node_modules/vscode/vscode.d.ts",
