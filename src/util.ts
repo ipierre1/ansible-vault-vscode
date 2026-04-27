@@ -4,6 +4,24 @@ import * as path from "path";
 import * as ini from "ini";
 import * as os from "os";
 
+function expandEnvVars(input: string): string {
+  return input.replace(/\$(\w+)|\${(\w+)}/g, (_, var1, var2) => {
+    const envVar = var1 || var2;
+    return process.env[envVar] ?? "";
+  });
+}
+
+function expandUser(path: string): string {
+  if (path.startsWith("~/")) {
+    return path.replace("~", process.env.HOME || process.env.USERPROFILE || "");
+  }
+  return path;
+}
+
+function expandAll(path: string): string {
+  return expandEnvVars(expandUser(path));
+}
+
 export const getInlineTextType = (text: string): "encrypted" | "plaintext" => {
   const normalized = text.trim().startsWith("!vault |")
     ? text.replace("!vault |", "")
@@ -169,13 +187,17 @@ export function findPassword(
   configFileInWorkspacePath: string,
   vaultPassFile: string,
 ): string | undefined {
-  if (fs.existsSync(vaultPassFile)) {
-    return fs.readFileSync(vaultPassFile, "utf-8").trim();
+  const expandedPassFile = expandAll(vaultPassFile.trim());
+
+  if (fs.existsSync(expandedPassFile)) {
+    const content = fs.readFileSync(expandedPassFile, "utf-8").trim();
+    return content.replace(/[\n\r\t]/gm, "");
   }
+
   const passPath = findAnsibleCfgFile(
     logs,
     configFileInWorkspacePath,
-    vaultPassFile.trim(),
+    expandedPassFile,
   );
   return readFile(passPath);
 }
@@ -197,6 +219,22 @@ const getValueByCfg = (logs: vscode.OutputChannel, cfgPath: string) => {
 
 export function getVaultIdList(idList: string): string[] {
   return idList.split(",").map((element) => element.trim().split("@")[0]);
+}
+
+export function reindentText(
+  text: string,
+  indentationLevel: number,
+  tabSize: number,
+): string {
+  const indent = " ".repeat((indentationLevel + 1) * tabSize);
+  const lines = text.split("\n");
+  while (lines.length > 0 && lines[lines.length - 1] === "") {
+    lines.pop();
+  }
+  if (lines.length > 1) {
+    return `!vault |\n${lines.map((line) => `${indent}${line}`).join("\n")}`;
+  }
+  return text;
 }
 
 export function getVaultIdPasswordDict(idList: string): Record<string, string> {
