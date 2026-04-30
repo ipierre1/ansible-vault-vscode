@@ -1,3 +1,10 @@
+## [1.4.0](https://github.com/ipierre1/ansible-vault-vscode/compare/v1.3.1...v1.4.0) (2026-04-30)
+
+### Features
+
+* Support dynamic executable `vault_password_file` scripts for path-based password resolution.
+* Graceful decryption fallback loop to prompt users manually if an invalid password is provided.
+
 ## [1.3.1](https://github.com/ipierre1/ansible-vault-vscode/compare/v1.3.0...v1.3.1) (2025-10-12)
 
 ### Bug Fixes

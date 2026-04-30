@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as ini from "ini";
 import * as os from "os";
+import * as child_process from "child_process";
 
 function expandEnvVars(input: string): string {
   return input.replace(/\$(\w+)|\${(\w+)}/g, (_, var1, var2) => {
@@ -182,6 +183,80 @@ export function scanAnsibleCfg(
   return ["", undefined, undefined];
 }
 
+export function isExecutableScript(filePath: string): boolean {
+  try {
+    const stat = fs.statSync(filePath);
+    const isExecutable =
+      (stat.mode & fs.constants.S_IXUSR) !== 0 ||
+      (stat.mode & fs.constants.S_IXGRP) !== 0 ||
+      (stat.mode & fs.constants.S_IXOTH) !== 0;
+
+    if (!isExecutable) {
+      return false;
+    }
+
+    const fd = fs.openSync(filePath, "r");
+    const buffer = Buffer.alloc(2);
+    fs.readSync(fd, buffer, 0, 2, 0);
+    fs.closeSync(fd);
+
+    return buffer.toString("utf-8") === "#!";
+  } catch (e) {
+    return false;
+  }
+}
+
+function executeOrReadFile(
+  logs: vscode.OutputChannel,
+  filePath: string,
+  configFileInWorkspacePath: string,
+): string | undefined {
+  if (isExecutableScript(filePath)) {
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(
+      vscode.Uri.file(configFileInWorkspacePath),
+    );
+    const rootPath = workspaceFolder
+      ? workspaceFolder.uri.fsPath
+      : vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+
+    const relativeFilePath = rootPath
+      ? path.relative(rootPath, configFileInWorkspacePath)
+      : path.basename(configFileInWorkspacePath);
+
+    try {
+      const cwd = rootPath || path.dirname(configFileInWorkspacePath);
+      const result = child_process.spawnSync(filePath, [relativeFilePath], {
+        encoding: "utf-8",
+        cwd,
+      });
+
+      if (result.stderr && result.stderr.trim().length > 0) {
+        logs.appendLine(`[Script stderr] ${filePath}:\n${result.stderr.trim()}`);
+      }
+
+      if (result.error) {
+        logs.appendLine(`[Script error] ${filePath}: ${result.error.message}`);
+        return undefined;
+      }
+
+      if (result.status !== 0) {
+        logs.appendLine(`[Script exit] ${filePath} exited with status ${result.status}`);
+      }
+
+      if (result.stdout !== undefined && result.stdout !== null) {
+        return result.stdout.trim().replace(/[\n\r\t]/gm, "");
+      }
+      return undefined;
+    } catch (e: any) {
+      logs.appendLine(`[Script exception] ${filePath}: ${e.message}`);
+      return undefined;
+    }
+  }
+
+  const content = fs.readFileSync(filePath, "utf-8").trim();
+  return content.replace(/[\n\r\t]/gm, "");
+}
+
 export function findPassword(
   logs: vscode.OutputChannel,
   configFileInWorkspacePath: string,
@@ -190,8 +265,7 @@ export function findPassword(
   const expandedPassFile = expandAll(vaultPassFile.trim());
 
   if (fs.existsSync(expandedPassFile)) {
-    const content = fs.readFileSync(expandedPassFile, "utf-8").trim();
-    return content.replace(/[\n\r\t]/gm, "");
+    return executeOrReadFile(logs, expandedPassFile, configFileInWorkspacePath);
   }
 
   const passPath = findAnsibleCfgFile(
@@ -199,7 +273,11 @@ export function findPassword(
     configFileInWorkspacePath,
     expandedPassFile,
   );
-  return readFile(passPath);
+  
+  if (passPath && fs.existsSync(passPath)) {
+    return executeOrReadFile(logs, passPath, configFileInWorkspacePath);
+  }
+  return undefined;
 }
 
 export function readFile(filePath: string | undefined): string | undefined {
