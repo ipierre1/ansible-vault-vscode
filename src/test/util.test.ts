@@ -422,6 +422,18 @@ describe("findPassword", () => {
     expect(findPassword(logs, tmpDir, passFile)).toBe("mysecret");
   });
 
+  it("trims trailing newline when file is found via directory walking", () => {
+    // Simulates a relative vault_password_file resolved by walking up from a sub-directory.
+    // A file created by VS Code (or echo) includes a trailing LF that must be stripped.
+    const subDir = path.join(tmpDir, "project", "src");
+    fs.mkdirSync(subDir, { recursive: true });
+    const passFile = path.join(tmpDir, "project", ".vault_pass");
+    fs.writeFileSync(passFile, "mysecret\n", "utf-8");
+    // Use subDir as the start path (exists) and only the filename so
+    // fs.existsSync(expandedPassFile) is false, triggering findAnsibleCfgFile.
+    expect(findPassword(logs, subDir, ".vault_pass")).toBe("mysecret");
+  });
+
   it("returns undefined when the password file does not exist anywhere", () => {
     expect(findPassword(logs, tmpDir, "nonexistent_pass_file")).toBeUndefined();
   });
