@@ -199,7 +199,8 @@ export function findPassword(
     configFileInWorkspacePath,
     expandedPassFile,
   );
-  return readFile(passPath);
+  const content = readFile(passPath);
+  return content ? content.trim().replace(/[\n\r\t]/gm, "") : undefined;
 }
 
 export function readFile(filePath: string | undefined): string | undefined {
