@@ -138,7 +138,7 @@
     "conventional-changelog-conventionalcommits": "^10.2.1",
     "eslint": "^10.6.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "vscode:package": "vsce package",
