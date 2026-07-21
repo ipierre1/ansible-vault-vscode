@@ -137,7 +137,7 @@
     "@vscode/vsce": "^3.9.2",
     "conventional-changelog-conventionalcommits": "^10.2.1",
     "eslint": "^10.7.0",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   },
   "scripts": {
