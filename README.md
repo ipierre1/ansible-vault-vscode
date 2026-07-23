@@ -78,6 +78,49 @@ The extension employs a path search algorithm that starts from the current file'
 
 Once an `ansible.cfg` file is found, the extension extracts relevant configuration settings such as `vault_password_file` and `vault_identity_list`. These settings are then used to determine the password file and vault identities needed for encryption and decryption.
 
+### Advanced: Dynamic Passwords for Multi-Environment Projects
+
+<details>
+<summary><strong>How to automatically use different passwords based on the file's path</strong></summary>
+
+If your Ansible repository manages multiple environments (e.g., `prod` vs `test`), you likely use different vault passwords for each. Instead of typing the password manually every time you switch between environment folders, you can automate this by providing an executable script as your `vault_password_file`.
+
+When the configured `vault_password_file` (in your `ansible.cfg` or VS Code settings) is an executable script (e.g., starts with `#!/usr/bin/env bash` and has `+x` permissions), this extension will execute it. The filepath (relative to the project root) is passed as the first argument, allowing your script to determine and output the correct password via `stdout`. Any diagnostic output written to `stderr` is logged to the extension's VS Code output channel.
+
+**Example Setup:**
+
+1. Set `ansible.cfg`'s `vault_password_file` to `./vault_password.sh`.
+2. Create the file `vault_password.sh` in your project root with the contents below.
+3. Make the script executable by running `chmod +x vault_password.sh`.
+4. Set the `ANSIBLE_VAULT_PROD` and `ANSIBLE_VAULT_TEST` environment variables in your terminal prior to starting VS Code.
+5. When you decrypt an Ansible vault string, the extension will execute the script and use the output as the `ANSIBLE_VAULT_PASSWORD`.
+
+**`vault_password.sh`:**
+```bash
+#!/usr/bin/env bash
+
+# When set, use ANSIBLE_VAULT_PROD for prod files (matching ${PROD_FILE_SUBSTRING_MATCH}), and ANSIBLE_VAULT_TEST for non-prod files; falling back to ANSIBLE_VAULT_PASSWORD
+
+PROD_FILE_SUBSTRING_MATCH="environment/prod/"
+PROD_FILE="$(dirname "${TARGET_FILE}" | grep -q "${PROD_FILE_SUBSTRING_MATCH}" && echo true)"
+TARGET_FILE="$*"
+
+if [ ! -z "${ANSIBLE_VAULT_PROD}" ] && [ ! -z "${PROD_FILE}" ]; then # Prod vault password + Prod file
+    echo "Production file path, using Production Ansible Password value" >&2
+    [ ! -z "${ANSIBLE_VAULT_PASSWORD}" ] && [ "${ANSIBLE_VAULT_PASSWORD}" != "${ANSIBLE_VAULT_PROD}" ] && echo "WARNING: ANSIBLE_VAULT_PASSWORD is set to a different value that ANSIBLE_VAULT_PROD" >&2
+    echo "${ANSIBLE_VAULT_PROD}"
+elif [ ! -z "${ANSIBLE_VAULT_TEST}" ] && [ -z "${PROD_FILE}" ]; then # Non-prod vault password + Non-prod file
+    echo "Non-prod file path, using Non-prod Ansible Password value" >&2
+    [ -z ${ANSIBLE_VAULT_PASSWORD} ] && [ "${ANSIBLE_VAULT_PASSWORD}" != "${ANSIBLE_VAULT_TEST}" ] && echo "WARNING: ANSIBLE_VAULT_PASSWORD is set to a different value that ANSIBLE_VAULT_TEST" >&2
+    echo "${ANSIBLE_VAULT_TEST}"
+else # Fallback to normal environment vault password
+    echo "Providing ANSIBLE_VAULT_PASSWORD value from environment" >&2
+    [ -z "${ANSIBLE_VAULT_PASSWORD}" ] && echo "WARNING: ANSIBLE_VAULT_PASSWORD is blank!" >&2 || echo "using ANSIBLE_VAULT_PASSWORD" >&2
+    echo "${ANSIBLE_VAULT_PASSWORD}"
+fi
+```
+</details>
+
 ## Additional Information
 
 - [Ansible®](https://docs.ansible.com/ansible/latest/dev_guide/style_guide/trademarks.html) is a registered trademark of [RedHat®](https://www.redhat.com/en).
