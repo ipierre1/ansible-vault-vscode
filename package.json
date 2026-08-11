@@ -136,7 +136,7 @@
     "@typescript-eslint/parser": "^8.66.0",
     "@vscode/vsce": "^3.9.2",
     "conventional-changelog-conventionalcommits": "^10.2.1",
-    "eslint": "^10.8.0",
+    "eslint": "^10.8.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.10"
   },
