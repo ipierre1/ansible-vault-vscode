@@ -132,7 +132,7 @@
     "@types/ini": "^4.1.1",
     "@types/node": "^26.4.0",
     "@types/vscode": "^1.120.0",
-    "@typescript-eslint/eslint-plugin": "^8.68.0",
+    "@typescript-eslint/eslint-plugin": "^8.69.0",
     "@typescript-eslint/parser": "^8.69.0",
     "@vscode/vsce": "^3.9.2",
     "conventional-changelog-conventionalcommits": "^10.4.0",
