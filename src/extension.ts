@@ -161,7 +161,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Resolve password
     let pass: string | undefined;
-
     if (config.keyFile || config.keyPass) {
       if (config.keyFile) {
         const keyFile = (config.keyFile as string).trim();
@@ -191,123 +190,138 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }
 
-    if (!pass) {
-      pass = await vscode.window.showInputBox({
-        prompt: isRekey
-          ? "Enter the CURRENT ansible-vault password (to decrypt):"
-          : "Enter the ansible-vault password:",
-        password: true,
-      });
-    }
+    let actionDone = false;
+    while (!actionDone) {
+      if (!pass) {
+        pass = await vscode.window.showInputBox({
+          prompt: isRekey
+            ? "Enter the CURRENT ansible-vault password (to decrypt):"
+            : "Enter the ansible-vault password:",
+          password: true,
+        });
+      }
 
-    if (!pass) {
-      vscode.window.showWarningMessage(
-        "No password provided. Operation cancelled.",
-      );
-      return;
-    }
-
-    // Perform encrypt / decrypt on selection or full file
-    if (selectedText) {
-      const type = getInlineTextType(selectedText);
-
-      if (type === "plaintext") {
-        logs.appendLine(`🔒 Encrypt selected text`);
-        const status = vscode.window.setStatusBarMessage(
-          "$(loading~spin) Encrypting...",
+      if (!pass) {
+        vscode.window.showWarningMessage(
+          "No password provided. Operation cancelled.",
         );
-        const encryptedText = await encrypt(selectedText, pass, vaultId);
-        status.dispose();
-        if (encryptedText) {
-          await editor.edit((editBuilder) => {
-            editBuilder.replace(
-              selection,
-              reindentText(
-                encryptedText,
-                getIndentationLevel(editor, selection),
-                Number(editor.options.tabSize),
-              ),
-            );
-          });
-          if (!isRekey) {
-            vscode.window.showInformationMessage("Selection encrypted.");
+        return;
+      }
+
+      // Perform encrypt / decrypt on selection or full file
+      if (selectedText) {
+        const type = getInlineTextType(selectedText);
+
+        if (type === "plaintext") {
+          logs.appendLine(`🔒 Encrypt selected text`);
+          const status = vscode.window.setStatusBarMessage(
+            "$(loading~spin) Encrypting...",
+          );
+          const encryptedText = await encrypt(selectedText, pass, vaultId);
+          status.dispose();
+          if (encryptedText) {
+            await editor.edit((editBuilder) => {
+              editBuilder.replace(
+                selection,
+                reindentText(
+                  encryptedText,
+                  getIndentationLevel(editor, selection),
+                  Number(editor.options.tabSize),
+                ),
+              );
+            });
+            if (!isRekey) {
+              vscode.window.showInformationMessage("Selection encrypted.");
+            }
           }
-        }
-      } else if (type === "encrypted") {
-        logs.appendLine(`🔓 Decrypt selected text`);
-        const status = vscode.window.setStatusBarMessage(
-          "$(loading~spin) Decrypting...",
-        );
-        const decryptedText = await decrypt(
-          selectedText
+          actionDone = true;
+        } else if (type === "encrypted") {
+          logs.appendLine(`🔓 Decrypt selected text`);
+          const status = vscode.window.setStatusBarMessage(
+            "$(loading~spin) Decrypting...",
+          );
+          const vaultTextToDecrypt = selectedText
             .replace("!vault |", "")
             .trim()
-            .replace(/[^\S\r\n]+/gm, ""),
-          pass,
-          vaultId,
-        );
-        status.dispose();
-        if (decryptedText === undefined) {
-          vscode.window.showErrorMessage("Decryption failed: Invalid Vault");
-        } else {
-          await editor.edit((editBuilder) => {
-            editBuilder.replace(selection, decryptedText);
-          });
-          if (!isRekey) {
-            vscode.window.showInformationMessage("Selection decrypted.");
-          }
-        }
-      }
-    } else {
-      const content = editor.document.getText();
-      const type = getTextType(content);
+            .replace(/[^\S\r\n]+/gm, "");
 
-      if (type === "plaintext") {
-        logs.appendLine(`🔒 Encrypt entire file`);
-        const status = vscode.window.setStatusBarMessage(
-          "$(loading~spin) Encrypting...",
-        );
-        const encryptedText = await encrypt(content, pass, vaultId);
-        status.dispose();
-        if (encryptedText) {
-          await editor.edit((builder) => {
-            builder.replace(
-              new vscode.Range(
-                doc.lineAt(0).range.start,
-                doc.lineAt(doc.lineCount - 1).range.end,
-              ),
-              encryptedText,
-            );
-          });
-          if (!isRekey) {
-            vscode.window.showInformationMessage(
-              `File encrypted: '${doc.fileName}'`,
-            );
+          let decryptedText = await decrypt(
+            vaultTextToDecrypt,
+            pass,
+            vaultId,
+          );
+          status.dispose();
+
+          if (decryptedText === undefined) {
+            vscode.window.showErrorMessage("Decryption failed: Invalid Vault");
+            pass = undefined;
+            continue;
+          } else {
+            await editor.edit((editBuilder) => {
+              editBuilder.replace(selection, decryptedText);
+            });
+            if (!isRekey) {
+              vscode.window.showInformationMessage("Selection decrypted.");
+            }
+            actionDone = true;
           }
         }
-      } else if (type === "encrypted") {
-        logs.appendLine(`🔓 Decrypt entire file`);
-        const status = vscode.window.setStatusBarMessage(
-          "$(loading~spin) Decrypting...",
-        );
-        const decryptedText = await decrypt(content, pass, vaultId);
-        status.dispose();
-        if (decryptedText === undefined) {
-          vscode.window.showErrorMessage("Decryption failed: Invalid Vault");
-        } else {
-          await editor.edit((builder) => {
-            builder.replace(
-              new vscode.Range(
-                doc.lineAt(0).range.start,
-                doc.lineAt(doc.lineCount - 1).range.end,
-              ),
-              decryptedText,
-            );
-          });
-          if (!isRekey) {
-            vscode.window.showInformationMessage(
-              `File decrypted: '${doc.fileName}'`,
-            );
+      } else {
+        const content = editor.document.getText();
+        const type = getTextType(content);
+
+        if (type === "plaintext") {
+          logs.appendLine(`🔒 Encrypt entire file`);
+          const status = vscode.window.setStatusBarMessage(
+            "$(loading~spin) Encrypting...",
+          );
+          const encryptedText = await encrypt(content, pass, vaultId);
+          status.dispose();
+          if (encryptedText) {
+            await editor.edit((builder) => {
+              builder.replace(
+                new vscode.Range(
+                  doc.lineAt(0).range.start,
+                  doc.lineAt(doc.lineCount - 1).range.end,
+                ),
+                encryptedText,
+              );
+            });
+            if (!isRekey) {
+              vscode.window.showInformationMessage(
+                `File encrypted: '${doc.fileName}'`,
+              );
+            }
+          }
+          actionDone = true;
+        } else if (type === "encrypted") {
+          logs.appendLine(`🔓 Decrypt entire file`);
+          const status = vscode.window.setStatusBarMessage(
+            "$(loading~spin) Decrypting...",
+          );
+          let decryptedText = await decrypt(content, pass, vaultId);
+          status.dispose();
+
+          if (decryptedText === undefined) {
+            vscode.window.showErrorMessage("Decryption failed: Invalid Vault");
+            pass = undefined;
+            continue;
+          } else {
+            await editor.edit((builder) => {
+              builder.replace(
+                new vscode.Range(
+                  doc.lineAt(0).range.start,
+                  doc.lineAt(doc.lineCount - 1).range.end,
+                ),
+                decryptedText,
+              );
+            });
+            if (!isRekey) {
+              vscode.window.showInformationMessage(
+                `File decrypted: '${doc.fileName}'`,
+              );
+            }
+            actionDone = true;
           }
         }
       }
@@ -404,7 +418,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 }
 
-export function deactivate() {}
+export function deactivate() { }
 
 const getIndentationLevel = (
   editor: vscode.TextEditor,
