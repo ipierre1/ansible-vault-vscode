@@ -32,6 +32,17 @@ export const getInlineTextType = (text: string): "encrypted" | "plaintext" => {
     : "plaintext";
 };
 
+// A YAML comment starts with "#" at the beginning of the line or after whitespace.
+const stripYamlComment = (line: string): string => {
+  const match = /(^|\s)#/.exec(line);
+  return match ? line.slice(0, match.index) : line;
+};
+
+export const isVaultedLine = (line: string): boolean => {
+  const code = stripYamlComment(line);
+  return code.includes("!vault |") || code.startsWith("$ANSIBLE_VAULT;");
+};
+
 export const getTextType = (text: string): "encrypted" | "plaintext" => {
   return text.startsWith("$ANSIBLE_VAULT;") ? "encrypted" : "plaintext";
 };

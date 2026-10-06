@@ -13,6 +13,7 @@ import {
   getVaultIdList,
   getVaultIdPasswordDict,
   isVaultIdList,
+  isVaultedLine,
   readFile,
   reindentText,
   scanAnsibleCfg,
@@ -67,6 +68,37 @@ describe("getInlineTextType", () => {
 
   it("returns plaintext when $ANSIBLE_VAULT is not at the start", () => {
     expect(getInlineTextType("key: $ANSIBLE_VAULT;1.1;AES256")).toBe("plaintext");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isVaultedLine
+// ---------------------------------------------------------------------------
+
+describe("isVaultedLine", () => {
+  it("detects a !vault tag", () => {
+    expect(isVaultedLine("  db-password: !vault |")).toBe(true);
+  });
+
+  it("detects a bare vault header", () => {
+    expect(isVaultedLine("$ANSIBLE_VAULT;1.1;AES256")).toBe(true);
+  });
+
+  it("ignores a commented-out !vault tag", () => {
+    expect(isVaultedLine("#   db-password: !vault |")).toBe(false);
+    expect(isVaultedLine("    # db-password: !vault |")).toBe(false);
+  });
+
+  it("ignores a !vault tag in a trailing comment", () => {
+    expect(isVaultedLine("key: value # !vault |")).toBe(false);
+  });
+
+  it("ignores a commented-out vault header", () => {
+    expect(isVaultedLine("#             $ANSIBLE_VAULT;1.1;AES256")).toBe(false);
+  });
+
+  it("keeps a !vault tag when # is not a comment", () => {
+    expect(isVaultedLine("key#1: !vault |")).toBe(true);
   });
 });
 

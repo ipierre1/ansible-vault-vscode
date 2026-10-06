@@ -8,6 +8,7 @@ import {
   getTextType,
   getVaultIdList,
   isVaultIdList,
+  isVaultedLine,
   reindentText,
   scanAnsibleCfg,
   untildify,
@@ -17,7 +18,7 @@ import { Vault } from "ansible-vault";
 
 const logs = vscode.window.createOutputChannel("Ansible Vault");
 
-class VaultedLineCodeLensProvider implements vscode.CodeLensProvider {
+export class VaultedLineCodeLensProvider implements vscode.CodeLensProvider {
   provideCodeLenses(
     document: vscode.TextDocument,
     token: vscode.CancellationToken,
@@ -26,7 +27,7 @@ class VaultedLineCodeLensProvider implements vscode.CodeLensProvider {
 
     for (let line = 0; line < document.lineCount; line++) {
       const text = document.lineAt(line).text;
-      if (text.includes("!vault |") || text.startsWith("$ANSIBLE_VAULT;")) {
+      if (isVaultedLine(text)) {
         const range = new vscode.Range(line, 0, line, text.length);
         codeLenses.push(
           new vscode.CodeLens(range, {
