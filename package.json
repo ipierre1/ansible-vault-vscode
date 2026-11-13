@@ -133,7 +133,7 @@
     "@types/node": "^26.6.6",
     "@types/vscode": "^1.120.0",
     "@typescript-eslint/eslint-plugin": "^8.72.1",
-    "@typescript-eslint/parser": "^8.72.1",
+    "@typescript-eslint/parser": "^8.72.2",
     "@vscode/vsce": "^4.1.0",
     "conventional-changelog-conventionalcommits": "^10.4.0",
     "eslint": "^10.14.0",
